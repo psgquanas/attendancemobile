@@ -1,4 +1,3 @@
-import React from 'react';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs, router } from 'expo-router';
 import {
@@ -138,7 +137,7 @@ export default function AppTabs() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
             <LayoutDashboard size={size} color={color} strokeWidth={1.5} />
           ),
