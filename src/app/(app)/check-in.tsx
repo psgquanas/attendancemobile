@@ -1,9 +1,8 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { authClient } from '@/lib/auth-client';
 
 export default function CheckIn() {
     return (
@@ -12,9 +11,6 @@ export default function CheckIn() {
             <ThemedText themeColor="textSecondary">
                 You are signed in as CheckIn.
             </ThemedText>
-            <TouchableOpacity onPress={() => authClient.signOut()}>
-                <ThemedText themeColor="textSecondary">Logout</ThemedText>
-            </TouchableOpacity>
         </ThemedView>
     );
 }

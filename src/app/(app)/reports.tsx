@@ -1,9 +1,8 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { authClient } from '@/lib/auth-client';
 
 export default function Report() {
     return (
@@ -12,9 +11,6 @@ export default function Report() {
             <ThemedText themeColor="textSecondary">
                 You are signed in as Report.
             </ThemedText>
-            <TouchableOpacity onPress={() => authClient.signOut()}>
-                <ThemedText themeColor="textSecondary">Logout</ThemedText>
-            </TouchableOpacity>
         </ThemedView>
     );
 }

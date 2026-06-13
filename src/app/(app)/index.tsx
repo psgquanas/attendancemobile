@@ -1,147 +1,170 @@
 import React from 'react';
-import { Redirect } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
   ActivityIndicator,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Clock,
+  Bell,
+  CalendarDays,
+  ChevronRight,
   CircleCheck,
+  Clock,
   FileText,
-  PlusCircle,
   MapPin,
+  Users,
 } from 'lucide-react-native';
-import { Colors } from '@/constants/theme';
+
 import { authClient } from '@/lib/auth-client';
+import { Colors, Outfit } from '@/constants/theme';
 
-type StatCard = {
+type Palette = (typeof Colors)[keyof typeof Colors];
+
+type SummaryTile = {
   label: string;
-  value: string | number;
-  accent: string;
-};
-
-type Session = {
-  id: string;
-  title: string;
-  room: string;
-  time: string;
-  status: 'live' | 'upcoming';
-  checkedIn?: number;
-};
-
-type ActivityItem = {
-  id: string;
+  value: string;
+  sublabel: string;
   icon: React.ReactNode;
-  title: string;
-  time: string;
-  accentColor: string;
+  tint: keyof Palette;
+  muted?: boolean;
 };
 
-function StatCardItem({ card, colors }: { card: StatCard; colors: typeof Colors[keyof typeof Colors] }) {
+type HistoryEntry = {
+  id: string;
+  day: string;
+  weekday: string;
+  checkIn: string;
+  checkOut: string;
+  totalHours: string;
+  location: string;
+};
+
+function formatDisplayDate(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
+function getDisplayName(session: unknown) {
+  const typedSession = session as {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+    } | null;
+  } | null;
+
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.backgroundElement }]}>
-      <View style={[styles.statAccentBar, { backgroundColor: card.accent }]} />
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{card.label}</Text>
-      <Text style={[styles.statValue, { color: colors.text }]}>{card.value}</Text>
-    </View>
+    typedSession?.user?.name?.trim() ||
+    typedSession?.user?.email?.split('@')[0] ||
+    'Akhmad Maariz'
   );
 }
 
-function SessionCard({ session, colors }: { session: Session; colors: typeof Colors[keyof typeof Colors] }) {
-  const isLive = session.status === 'live';
-  return (
-    <View style={[
-      styles.sessionCard,
-      {
-        backgroundColor: colors.backgroundElement,
-        borderColor: colors.backgroundSelected,
-      }
-    ]}>
-      <View style={styles.sessionCardHeader}>
-        <View style={[
-          styles.statusPill,
-          { backgroundColor: isLive ? 'rgba(239, 68, 68, 0.12)' : colors.backgroundSelected }
-        ]}>
-          {isLive && <View style={styles.liveDot} />}
-          <Text style={[
-            styles.statusPillText,
-            { color: isLive ? '#EF4444' : colors.textSecondary }
-          ]}>
-            {isLive ? 'LIVE' : 'Upcoming'}
-          </Text>
-        </View>
-        <View style={styles.sessionTime}>
-          <Clock size={12} color={colors.textSecondary} strokeWidth={1.5} />
-          <Text style={[styles.sessionTimeText, { color: colors.textSecondary }]}>{session.time}</Text>
-        </View>
-      </View>
-
-      <View style={styles.sessionCardBody}>
-        <Text style={[styles.sessionTitle, { color: colors.text }]} numberOfLines={1}>
-          {session.title}
-        </Text>
-        <View style={styles.sessionRoomContainer}>
-          <MapPin size={12} color={colors.textSecondary} strokeWidth={1.5} />
-          <Text style={[styles.sessionRoom, { color: colors.textSecondary }]} numberOfLines={1}>
-            {session.room}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.sessionFooter}>
-        {isLive && session.checkedIn !== undefined ? (
-          <>
-            <View style={styles.avatarStack}>
-              {['A', 'M'].map((l, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.avatar,
-                    {
-                      backgroundColor: colors.backgroundSelected,
-                      borderColor: colors.backgroundElement,
-                      marginLeft: i === 0 ? 0 : -8,
-                    }
-                  ]}
-                >
-                  <Text style={[styles.avatarText, { color: colors.text }]}>{l}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={[styles.checkedInText, { color: colors.textSecondary }]}>
-              +{session.checkedIn} Checked-in
-            </Text>
-          </>
-        ) : (
-          <Text style={[styles.waitingText, { color: colors.textSecondary }]}>
-            Waiting to start...
-          </Text>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function ActivityRow({ item, isLast, colors }: {
-  item: ActivityItem;
-  isLast: boolean;
-  colors: typeof Colors[keyof typeof Colors];
+function SectionHeader({
+  title,
+  action,
+  colors,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  colors: Palette;
 }) {
   return (
-    <View style={styles.activityRow}>
-      {!isLast && <View style={[styles.timelineLine, { backgroundColor: colors.backgroundSelected }]} />}
-      <View style={[styles.activityIcon, { backgroundColor: colors.background, borderColor: colors.backgroundSelected }]}>
-        {item.icon}
+    <View style={styles.sectionHeader}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+      {action}
+    </View>
+  );
+}
+
+function SummaryCard({
+  tile,
+  colors,
+}: {
+  tile: SummaryTile;
+  colors: Palette;
+}) {
+  const accent = colors[tile.tint];
+
+  return (
+    <View
+      style={[
+        styles.summaryCard,
+        {
+          backgroundColor: colors.backgroundElement,
+          borderColor: colors.backgroundSelected,
+          opacity: tile.muted ? 0.72 : 1,
+        },
+      ]}
+    >
+      <View style={[styles.summaryIcon, { backgroundColor: `${accent}14` }]}>
+        {tile.icon}
       </View>
-      <View style={styles.activityContent}>
-        <Text style={[styles.activityTitle, { color: colors.text }]}>{item.title}</Text>
-        <Text style={[styles.activityTime, { color: colors.textSecondary }]}>{item.time}</Text>
+      <Text style={[styles.summaryLabel, { color: colors.text }]}>{tile.label}</Text>
+      <Text style={[styles.summarySubLabel, { color: colors.textSecondary }]}>{tile.sublabel}</Text>
+      <Text style={[styles.summaryValue, { color: tile.muted ? colors.textSecondary : colors.text }]}>
+        {tile.value}
+      </Text>
+    </View>
+  );
+}
+
+function HistoryCard({
+  entry,
+  colors,
+}: {
+  entry: HistoryEntry;
+  colors: Palette;
+}) {
+  return (
+    <View
+      style={[
+        styles.historyCard,
+        {
+          backgroundColor: colors.backgroundElement,
+          borderColor: colors.backgroundSelected,
+        },
+      ]}
+    >
+      <View style={[styles.historyDateBlock, { backgroundColor: colors.primary }]}>
+        <Text style={styles.historyDay}>{entry.day}</Text>
+        <Text style={styles.historyWeekday}>{entry.weekday}</Text>
+      </View>
+
+      <View style={styles.historyDetails}>
+        <View style={styles.historyStatsRow}>
+          <View style={styles.historyStat}>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.checkIn}</Text>
+            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Check in</Text>
+          </View>
+          <View style={[styles.historyDivider, { backgroundColor: colors.backgroundSelected }]} />
+          <View style={styles.historyStat}>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.checkOut}</Text>
+            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Check out</Text>
+          </View>
+          <View style={[styles.historyDivider, { backgroundColor: colors.backgroundSelected }]} />
+          <View style={styles.historyStat}>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.totalHours}</Text>
+            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Total hours</Text>
+          </View>
+        </View>
+
+        <View style={styles.historyLocationRow}>
+          <MapPin size={13} color={colors.primary} strokeWidth={2} />
+          <Text style={[styles.historyLocation, { color: colors.textSecondary }]} numberOfLines={1}>
+            {entry.location}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -152,16 +175,11 @@ export default function DashboardScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
-  const ACCENT_BLUE = '#6366F1';
-  const ACCENT_AMBER = '#F59E0B';
-  const ACCENT_GREEN = '#10B981';
-  const ACCENT_PINK = '#F472B6';
-
   if (isPending) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.text} size="large" />
-      </View>
+      <SafeAreaView edges={['top']} style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </SafeAreaView>
     );
   }
 
@@ -169,344 +187,408 @@ export default function DashboardScreen() {
     return <Redirect href="/(auth)/sign-in" />;
   }
 
-  const statCards: StatCard[] = [
-    { label: 'Classes Created', value: 12, accent: ACCENT_BLUE },
-    { label: 'Classes Joined', value: 8, accent: ACCENT_AMBER },
-    { label: 'Overall Attendance', value: '94%', accent: ACCENT_GREEN },
-    { label: 'Active Sessions', value: 3, accent: ACCENT_PINK },
+  const summaryTiles: SummaryTile[] = [
+    {
+      label: 'Check In',
+      sublabel: 'Early',
+      value: '07:58',
+      icon: <CircleCheck size={18} color={colors.primary} strokeWidth={1.75} />,
+      tint: 'primary',
+    },
+    {
+      label: 'Check Out',
+      sublabel: 'Not yet',
+      value: '17:00',
+      icon: <Clock size={18} color={colors.textSecondary} strokeWidth={1.75} />,
+      tint: 'textSecondary',
+      muted: true,
+    },
+    {
+      label: 'Absence',
+      sublabel: 'November',
+      value: '3 Day',
+      icon: <FileText size={18} color={colors.primary} strokeWidth={1.75} />,
+      tint: 'primary',
+    },
+    {
+      label: 'Total Attended',
+      sublabel: 'November',
+      value: '15 Day',
+      icon: <Users size={18} color={colors.primary} strokeWidth={1.75} />,
+      tint: 'primary',
+    },
   ];
 
-  const sessions: Session[] = [
-    { id: '1', title: 'Advanced Mathematics', room: 'Room 302-B', time: '10:00 AM', status: 'live', checkedIn: 22 },
-    { id: '2', title: 'Data Structures', room: 'Lab 4A', time: '11:30 AM', status: 'upcoming' },
+  const history: HistoryEntry[] = [
+    {
+      id: '22',
+      day: '22',
+      weekday: 'Wed',
+      checkIn: '07:57',
+      checkOut: '17:00',
+      totalHours: '08:03',
+      location: 'Office, West Jakarta, Indonesia',
+    },
+    {
+      id: '21',
+      day: '21',
+      weekday: 'Tue',
+      checkIn: '08:03',
+      checkOut: '17:08',
+      totalHours: '08:05',
+      location: 'Campus Lab, South Wing',
+    },
+    {
+      id: '20',
+      day: '20',
+      weekday: 'Mon',
+      checkIn: '07:59',
+      checkOut: '16:54',
+      totalHours: '07:56',
+      location: 'Main Building, Attendance Desk',
+    },
   ];
 
-  const activities: ActivityItem[] = [
-    {
-      id: '1',
-      icon: <CircleCheck size={14} color={ACCENT_BLUE} strokeWidth={1.5} />,
-      title: 'Checked into Physics',
-      time: 'Today, 09:15 AM',
-      accentColor: ACCENT_BLUE,
-    },
-    {
-      id: '2',
-      icon: <FileText size={14} color={ACCENT_AMBER} strokeWidth={1.5} />,
-      title: 'Weekly Report Generated',
-      time: 'Yesterday, 18:00 PM',
-      accentColor: ACCENT_AMBER,
-    },
-    {
-      id: '3',
-      icon: <PlusCircle size={14} color={colors.textSecondary} strokeWidth={1.5} />,
-      title: 'Created new class "Seminar"',
-      time: 'Oct 12, 14:30 PM',
-      accentColor: colors.textSecondary,
-    },
-    {
-      id: '4',
-      icon: <PlusCircle size={14} color={colors.textSecondary} strokeWidth={1.5} />,
-      title: 'Created new class "Seminar"',
-      time: 'Oct 12, 14:30 PM',
-      accentColor: colors.textSecondary,
-    },
-    {
-      id: '5',
-      icon: <PlusCircle size={14} color={colors.textSecondary} strokeWidth={1.5} />,
-      title: 'Created new class "Seminar"',
-      time: 'Oct 12, 14:30 PM',
-      accentColor: colors.textSecondary,
-    },
-  ];
+  const displayName = getDisplayName(session);
+  const todayLabel = formatDisplayDate(new Date());
 
   return (
-    <View style={[styles.safe, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
-        {/* Stat Cards */}
-        <View style={styles.statGrid}>
-          {statCards.map((card, i) => (
-            <StatCardItem key={i} card={card} colors={colors} />
+        <View style={styles.headerBlock}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerCopy}>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>Good Morning,</Text>
+              <Text style={[styles.displayName, { color: colors.text }]} numberOfLines={1}>
+                {displayName}
+              </Text>
+            </View>
+
+            <Link href="/(navs)/notifications" asChild>
+              <Pressable
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.notificationButton,
+                  {
+                    backgroundColor: colors.backgroundElement,
+                    borderColor: colors.backgroundSelected,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Bell size={24} color={colors.text} strokeWidth={1.75} />
+              </Pressable>
+            </Link>
+          </View>
+
+          <View style={styles.metaRow}>
+            <View style={styles.dateWrap}>
+              <CalendarDays size={14} color={colors.textSecondary} strokeWidth={1.75} />
+              <Text style={[styles.dateText, { color: colors.text }]}>{todayLabel}</Text>
+            </View>
+
+            <View style={[styles.locationChip, { backgroundColor: colors.primary }]}>
+              <MapPin size={13} color={colors.primaryForeground} strokeWidth={2} />
+              <Text style={styles.locationText}>West Jakarta, Indonesia</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.summaryGrid}>
+          {summaryTiles.map((tile) => (
+            <SummaryCard key={tile.label} tile={tile} colors={colors} />
           ))}
         </View>
 
-        {/* Active Sessions */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Current Sessions</Text>
-            <TouchableOpacity>
-              <Text style={[styles.viewAll, { color: ACCENT_BLUE }]}>View All</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.hScroll}
-            contentContainerStyle={styles.hScrollContent}
-          >
-            {sessions.map((s) => (
-              <SessionCard key={s.id} session={s} colors={colors} />
-            ))}
-          </ScrollView>
-        </View>
+        <View style={styles.sectionBlock}>
+          <SectionHeader
+            title="Attendance History"
+            colors={colors}
+            action={
+              <Link href="/(navs)/attendance" asChild>
+                <Pressable hitSlop={10} style={({ pressed }) => [styles.sectionAction, { opacity: pressed ? 0.72 : 1 }]}>
+                  <Text style={[styles.sectionActionText, { color: colors.primary }]}>See More</Text>
+                </Pressable>
+              </Link>
+            }
+          />
 
-        {/* Recent Activity */}
-        <View style={[styles.section, styles.sectionLast]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</Text>
-          <View style={styles.timeline}>
-            {activities.map((item, i) => (
-              <ActivityRow
-                key={item.id}
-                item={item}
-                isLast={i === activities.length - 1}
-                colors={colors}
-              />
+          <View style={styles.historyList}>
+            {history.map((entry) => (
+              <HistoryCard key={entry.id} entry={entry} colors={colors} />
             ))}
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  screen: {
+    flex: 1,
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+  scroll: {
+    flex: 1,
   },
-  appName: {
-    fontSize: 10,
-    fontFamily: 'Outfit_600SemiBold',
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  headerGreetingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greeting: {
-    fontSize: 24,
-    fontFamily: 'Outfit_700Bold',
-    letterSpacing: -0.5,
-  },
-  logoutBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  logoutBtnText: {
-    fontSize: 12,
-    fontFamily: 'Outfit_500Medium',
-  },
-  scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 110, // padding to avoid floating tab bar overlap
-    gap: 24,
+    paddingTop: 20,
+    paddingBottom: 132,
+    gap: 18,
   },
 
-  // Stat grid
-  statGrid: {
+  headerBlock: {
+    gap: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  greeting: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontFamily: Outfit.regular,
+  },
+  displayName: {
+    fontSize: 26,
+    lineHeight: 32,
+    fontFamily: Outfit.bold,
+    letterSpacing: -0.5,
+  },
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 10,
+  },
+  dateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  dateText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: Outfit.medium,
+  },
+  locationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  locationText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: Outfit.medium,
+    color: '#FFFFFF',
+  },
+
+  summaryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
-  statCard: {
-    width: '48%',
-    borderRadius: 12,
+  summaryCard: {
+    width: (Dimensions.get('window').width - 52) / 2,
+    borderRadius: 22,
+    borderWidth: 1,
     padding: 16,
-    minHeight: 96,
-    justifyContent: 'space-between',
-    overflow: 'hidden',
+    minHeight: 138,
+    gap: 8,
   },
-  statAccentBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+  summaryIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  statLabel: {
-    fontSize: 11,
-    fontFamily: 'Outfit_500Medium',
-    letterSpacing: 0.2,
+  summaryLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontFamily: Outfit.semiBold,
   },
-  statValue: {
-    fontSize: 26,
-    fontFamily: 'Outfit_700Bold',
-    letterSpacing: -0.5,
-    marginTop: 8,
+  summarySubLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: Outfit.regular,
+  },
+  summaryValue: {
+    marginTop: 'auto',
+    fontSize: 24,
+    lineHeight: 28,
+    fontFamily: Outfit.bold,
+    letterSpacing: -0.4,
   },
 
-  // Section
-  section: { gap: 12 },
-  sectionLast: { paddingBottom: 8 },
-  sectionHeaderRow: {
+  sectionBlock: {
+    gap: 12,
+  },
+  sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Outfit_600SemiBold',
-    letterSpacing: 0.1,
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: Outfit.bold,
+    letterSpacing: -0.2,
   },
-  viewAll: {
+  sectionAction: {
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  sectionActionText: {
     fontSize: 13,
-    fontFamily: 'Outfit_600SemiBold',
-  },
-  hScroll: {
-    marginHorizontal: -20,
-  },
-  hScrollContent: {
-    paddingLeft: 20,
-    paddingRight: 6,
+    lineHeight: 18,
+    fontFamily: Outfit.semiBold,
   },
 
-  // Session cards
-  sessionCard: {
-    borderRadius: 16,
-    padding: 16,
-    width: 250,
-    height: 145,
-    marginRight: 14,
-    justifyContent: 'space-between',
-    borderWidth: 1,
+  historyList: {
+    gap: 12,
   },
-  sessionCardHeader: {
+  historyCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#EF4444',
-  },
-  statusPillText: {
-    fontSize: 10,
-    fontFamily: 'Outfit_700Bold',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  sessionTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sessionTimeText: {
-    fontSize: 11,
-    fontFamily: 'Outfit_400Regular',
-  },
-  sessionCardBody: {
-    gap: 2,
-  },
-  sessionTitle: {
-    fontSize: 15,
-    fontFamily: 'Outfit_600SemiBold',
-  },
-  sessionRoomContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sessionRoom: {
-    fontSize: 12,
-    fontFamily: 'Outfit_400Regular',
-  },
-  sessionFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    height: 24, // keep constant height for both states
-  },
-  avatarStack: {
-    flexDirection: 'row',
-  },
-  avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-  },
-  avatarText: {
-    fontSize: 9,
-    fontFamily: 'Outfit_700Bold',
-  },
-  checkedInText: {
-    fontSize: 12,
-    fontFamily: 'Outfit_400Regular',
-  },
-  waitingText: {
-    fontSize: 11,
-    fontFamily: 'Outfit_500Medium',
-  },
-
-  // Timeline
-  timeline: {
-    marginLeft: 8,
-    gap: 0,
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     gap: 14,
-    marginBottom: 20,
-    position: 'relative',
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: 'stretch',
   },
-  timelineLine: {
-    position: 'absolute',
-    left: 13,
-    top: 28,
-    bottom: -20,
-    width: 1,
-  },
-  activityIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
+  historyDateBlock: {
+    width: 82,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    gap: 4,
   },
-  activityContent: {
+  historyDay: {
+    fontSize: 28,
+    lineHeight: 32,
+    color: '#FFFFFF',
+    fontFamily: Outfit.bold,
+    letterSpacing: -0.6,
+  },
+  historyWeekday: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.92)',
+    fontFamily: Outfit.medium,
+  },
+  historyDetails: {
     flex: 1,
-    paddingTop: 2,
+    justifyContent: 'center',
+    gap: 10,
   },
-  activityTitle: {
-    fontSize: 14,
-    fontFamily: 'Outfit_500Medium',
-    lineHeight: 20,
+  historyStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
   },
-  activityTime: {
+  historyStat: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    paddingHorizontal: 4,
+  },
+  historyStatValue: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontFamily: Outfit.bold,
+    letterSpacing: -0.2,
+  },
+  historyStatLabel: {
     fontSize: 11,
-    fontFamily: 'Outfit_400Regular',
-    marginTop: 2,
+    lineHeight: 14,
+    fontFamily: Outfit.regular,
+  },
+  historyDivider: {
+    width: 1,
+    borderRadius: 999,
+  },
+  historyLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 6,
+  },
+  historyLocation: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: Outfit.medium,
+  },
+
+  footerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 16,
+  },
+  footerCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  footerLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: Outfit.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  footerTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontFamily: Outfit.bold,
+  },
+  footerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  footerButtonText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#FFFFFF',
+    fontFamily: Outfit.semiBold,
   },
 });

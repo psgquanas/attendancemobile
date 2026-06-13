@@ -1,4 +1,4 @@
-import { Calendar1, Users } from 'lucide-react-native';
+import { Calendar1, Users, Plus, UserPlus } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     View,
@@ -7,52 +7,10 @@ import {
     TouchableOpacity,
     StyleSheet,
     StatusBar,
+    useColorScheme,
 } from 'react-native';
+import { Colors } from '@/constants/theme';
 
-const colors = {
-    primaryFixedDim: '#c0c1ff',
-    outlineVariant: '#464554',
-    surface: '#121316',
-    surfaceBright: '#38393c',
-    tertiary: '#ffb3ad',
-    inverseOnSurface: '#2f3033',
-    surfaceContainerHighest: '#343538',
-    surfaceContainerLowest: '#0d0e11',
-    secondaryFixed: '#ffddb8',
-    surfaceVariant: '#343538',
-    surfaceDim: '#121316',
-    surfaceContainer: '#1e2022',
-    outline: '#908fa0',
-    background: '#121316',
-    errorContainer: '#93000a',
-    onTertiary: '#68000a',
-    onBackground: '#e3e2e6',
-    onSecondaryContainer: '#5b3800',
-    onPrimary: '#1000a9',
-    secondaryContainer: '#ee9800',
-    tertiaryContainer: '#ff5451',
-    surfaceTint: '#c0c1ff',
-    onSurfaceVariant: '#c7c4d7',
-    primary: '#c0c1ff',
-    inverseSurface: '#e3e2e6',
-    onPrimaryFixed: '#07006c',
-    secondary: '#ffb95f',
-    onSurface: '#e3e2e6',
-    surfaceContainerLow: '#1a1b1e',
-    primaryFixed: '#e1e0ff',
-    onTertiaryContainer: '#5c0008',
-    onSecondary: '#472a00',
-    inversePrimary: '#494bd6',
-    secondaryFixedDim: '#ffb95f',
-    error: '#ffb4ab',
-    surfaceContainerHigh: '#292a2d',
-    primaryContainer: '#8083ff',
-    onPrimaryContainer: '#0d0096',
-    onError: '#690005',
-    onErrorContainer: '#ffdad6',
-};
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface MyClass {
     id: string;
     name: string;
@@ -70,7 +28,6 @@ interface JoinedClass {
     attendance: number;
 }
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 const myClasses: MyClass[] = [
     {
         id: '1',
@@ -107,27 +64,25 @@ const joinedClasses: JoinedClass[] = [
     },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 const ProgressBar = ({
     value,
     color,
-    glowColor,
+    trackColor,
 }: {
     value: number;
     color: string;
-    glowColor: string;
+    trackColor: string;
 }) => (
-    <View style={styles.progressTrack}>
+    <View style={[styles.progressTrack, { backgroundColor: trackColor }]}>
         <View
             style={[
                 styles.progressFill,
                 {
                     width: `${value}%` as any,
                     backgroundColor: color,
-                    shadowColor: glowColor,
+                    shadowColor: color,
                     shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.7,
+                    shadowOpacity: 0.6,
                     shadowRadius: 6,
                     elevation: 4,
                 },
@@ -136,67 +91,76 @@ const ProgressBar = ({
     </View>
 );
 
-const MyClassCard = ({ item }: { item: MyClass }) => (
-    <View style={[styles.card, styles.cardShadow]}>
+const MyClassCard = ({
+    item,
+    colors,
+}: {
+    item: MyClass;
+    colors: typeof Colors[keyof typeof Colors];
+}) => (
+    <View style={[styles.card, styles.cardShadow, { backgroundColor: colors.backgroundElement, borderColor: colors.backgroundSelected }]}>
         {/* Accent left bar */}
         <View
             style={[
                 styles.accentBar,
-                {
-                    backgroundColor: colors.primaryContainer,
-                    shadowColor: colors.primaryContainer,
-                },
+                { backgroundColor: colors.primary, shadowColor: colors.primary },
             ]}
         />
 
         {/* Header row */}
         <View style={styles.cardHeader}>
             <View style={{ flex: 1 }}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <View style={styles.codeChip}>
-                    <Text style={styles.codeText}>Code: {item.code}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name}</Text>
+                <View style={[styles.codeChip, { backgroundColor: colors.primaryMuted }]}>
+                    <Text style={[styles.codeText, { color: colors.primary }]}>Code: {item.code}</Text>
                 </View>
             </View>
             <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.icon, { color: colors.onSurfaceVariant }]}>⋮</Text>
+                <Text style={[styles.icon, { color: colors.textSecondary }]}>⋮</Text>
             </TouchableOpacity>
         </View>
 
         {/* Stats row */}
         <View style={styles.statsRow}>
             <View style={styles.statItem}>
-                <Text style={styles.statIcon}><Calendar1 size={18} color={colors.onSurfaceVariant} /></Text>
-                <Text style={styles.statLabel}>{item.sessions} Sessions</Text>
+                <Calendar1 size={16} color={colors.textSecondary} />
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{item.sessions} Sessions</Text>
             </View>
             <View style={styles.statItem}>
-                <Text style={styles.statIcon}><Users size={18} color={colors.onSurfaceVariant} /></Text>
-                <Text style={styles.statLabel}>{item.members} Members</Text>
+                <Users size={16} color={colors.textSecondary} />
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{item.members} Members</Text>
             </View>
         </View>
 
         {/* Attendance bar */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.backgroundSelected }]} />
         <View style={styles.attendanceRow}>
-            <Text style={styles.attendanceLabel}>Avg. Attendance</Text>
-            <Text style={[styles.attendanceValue, { color: colors.primaryFixedDim }]}>
+            <Text style={[styles.attendanceLabel, { color: colors.textSecondary }]}>Avg. Attendance</Text>
+            <Text style={[styles.attendanceValue, { color: colors.primary }]}>
                 {item.avgAttendance}%
             </Text>
         </View>
         <ProgressBar
             value={item.avgAttendance}
-            color={colors.primaryContainer}
-            glowColor={colors.primaryContainer}
+            color={colors.primary}
+            trackColor={colors.backgroundSelected}
         />
     </View>
 );
 
-const JoinedClassCard = ({ item }: { item: JoinedClass }) => (
-    <View style={[styles.card, styles.cardShadow]}>
+const JoinedClassCard = ({
+    item,
+    colors,
+}: {
+    item: JoinedClass;
+    colors: typeof Colors[keyof typeof Colors];
+}) => (
+    <View style={[styles.card, styles.cardShadow, { backgroundColor: colors.backgroundElement, borderColor: colors.backgroundSelected }]}>
         {/* Accent left bar */}
         <View
             style={[
                 styles.accentBar,
-                { backgroundColor: colors.secondaryContainer },
+                { backgroundColor: colors.secondary, shadowColor: colors.secondary },
             ]}
         />
 
@@ -204,43 +168,50 @@ const JoinedClassCard = ({ item }: { item: JoinedClass }) => (
         <View style={styles.cardHeader}>
             <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
-                    <Text style={[styles.cardTitle, { flex: 1 }]}>{item.name}</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text, flex: 1 }]}>{item.name}</Text>
                     {item.isLive && (
-                        <View style={styles.liveBadge}>
-                            <Text style={styles.liveText}>LIVE</Text>
+                        <View style={[styles.liveBadge, { backgroundColor: (colors as any).destructive + '20', borderColor: (colors as any).destructive }]}>
+                            <Text style={[styles.liveText, { color: (colors as any).destructive }]}>LIVE</Text>
                         </View>
                     )}
                 </View>
                 <View style={styles.hostRow}>
                     <Text style={styles.hostIcon}>👤</Text>
-                    <Text style={styles.hostLabel}>Host: {item.host}</Text>
+                    <Text style={[styles.hostLabel, { color: colors.textSecondary }]}>Host: {item.host}</Text>
                 </View>
             </View>
         </View>
 
         {/* Attendance bar */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.backgroundSelected }]} />
         <View style={styles.attendanceRow}>
-            <Text style={styles.attendanceLabel}>Your Attendance</Text>
-            <Text style={[styles.attendanceValue, { color: colors.secondaryFixedDim }]}>
+            <Text style={[styles.attendanceLabel, { color: colors.textSecondary }]}>Your Attendance</Text>
+            <Text style={[styles.attendanceValue, { color: colors.secondary }]}>
                 {item.attendance}%
             </Text>
         </View>
         <ProgressBar
             value={item.attendance}
-            color={colors.secondaryContainer}
-            glowColor={colors.secondaryContainer}
+            color={colors.secondary}
+            trackColor={colors.backgroundSelected}
         />
     </View>
 );
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 const MyClassesScreen: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'my' | 'joined'>('my');
+    const scheme = useColorScheme();
+    const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+
+    const fabColor = activeTab === 'my' ? colors.primary : colors.secondary;
+    const fabIconColor = activeTab === 'my' ? colors.primaryForeground : colors.secondaryForeground;
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <StatusBar
+                barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+                backgroundColor={colors.background}
+            />
 
             <ScrollView
                 style={styles.scrollView}
@@ -248,11 +219,11 @@ const MyClassesScreen: React.FC = () => {
                 showsVerticalScrollIndicator={false}
             >
                 {/* Segmented Control */}
-                <View style={styles.segmentedControl}>
+                <View style={[styles.segmentedControl, { backgroundColor: colors.backgroundSelected }]}>
                     <TouchableOpacity
                         style={[
                             styles.segmentButton,
-                            activeTab === 'my' && styles.segmentButtonActive,
+                            activeTab === 'my' && [styles.segmentButtonActive, { backgroundColor: colors.backgroundElement }],
                         ]}
                         onPress={() => setActiveTab('my')}
                         activeOpacity={0.85}
@@ -260,9 +231,7 @@ const MyClassesScreen: React.FC = () => {
                         <Text
                             style={[
                                 styles.segmentText,
-                                activeTab === 'my'
-                                    ? styles.segmentTextActive
-                                    : styles.segmentTextInactive,
+                                { color: activeTab === 'my' ? colors.primary : colors.textSecondary },
                             ]}
                         >
                             My Classes
@@ -272,7 +241,7 @@ const MyClassesScreen: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.segmentButton,
-                            activeTab === 'joined' && styles.segmentButtonActive,
+                            activeTab === 'joined' && [styles.segmentButtonActive, { backgroundColor: colors.backgroundElement }],
                         ]}
                         onPress={() => setActiveTab('joined')}
                         activeOpacity={0.85}
@@ -280,9 +249,7 @@ const MyClassesScreen: React.FC = () => {
                         <Text
                             style={[
                                 styles.segmentText,
-                                activeTab === 'joined'
-                                    ? styles.segmentTextActive
-                                    : styles.segmentTextInactive,
+                                { color: activeTab === 'joined' ? colors.secondary : colors.textSecondary },
                             ]}
                         >
                             Joined Classes
@@ -293,27 +260,36 @@ const MyClassesScreen: React.FC = () => {
                 {/* Cards */}
                 <View style={styles.cardList}>
                     {activeTab === 'my'
-                        ? myClasses.map((item) => <MyClassCard key={item.id} item={item} />)
+                        ? myClasses.map((item) => <MyClassCard key={item.id} item={item} colors={colors} />)
                         : joinedClasses.map((item) => (
-                            <JoinedClassCard key={item.id} item={item} />
+                            <JoinedClassCard key={item.id} item={item} colors={colors} />
                         ))}
                 </View>
             </ScrollView>
 
             {/* FAB */}
-            <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-                <Text style={styles.fabIcon}>＋</Text>
-                <Text style={styles.fabLabel}>New Class</Text>
+            <TouchableOpacity
+                style={[
+                    styles.fab,
+                    {
+                        backgroundColor: fabColor,
+                        shadowColor: fabColor,
+                        borderColor: fabColor + '50',
+                    },
+                ]}
+                activeOpacity={0.85}
+            >
+                {activeTab === 'my'
+                    ? <Plus size={22} color={fabIconColor} strokeWidth={2.5} />
+                    : <UserPlus size={22} color={fabIconColor} strokeWidth={2} />}
             </TouchableOpacity>
         </View>
     );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     },
     scrollView: {
         flex: 1,
@@ -321,18 +297,15 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 20,
-        paddingBottom: 110, // Avoid overlapping floating bottom tab bar
+        paddingBottom: 110,
         gap: 16,
     },
 
     // Segmented control
     segmentedControl: {
         flexDirection: 'row',
-        backgroundColor: colors.surfaceContainerLowest,
         borderRadius: 999,
         padding: 4,
-        borderWidth: 1,
-        borderColor: 'rgba(70,69,84,0.1)',
         marginBottom: 8,
     },
     segmentButton: {
@@ -343,12 +316,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     segmentButtonActive: {
-        backgroundColor: colors.surfaceContainerHighest,
-        borderWidth: 1,
-        borderColor: 'rgba(70,69,84,0.2)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
     },
@@ -356,12 +326,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Outfit_600SemiBold',
         letterSpacing: 0.1,
-    },
-    segmentTextActive: {
-        color: colors.primaryFixedDim,
-    },
-    segmentTextInactive: {
-        color: colors.onSurfaceVariant,
     },
 
     // Card list
@@ -371,20 +335,18 @@ const styles = StyleSheet.create({
 
     // Card base
     card: {
-        backgroundColor: colors.surfaceContainer,
         borderRadius: 12,
         padding: 20,
         borderWidth: 1,
-        borderColor: 'rgba(70,69,84,0.2)',
         overflow: 'hidden',
         gap: 12,
     },
     cardShadow: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 8,
-        elevation: 6,
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 4,
     },
 
     // Accent left bar
@@ -395,7 +357,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         width: 4,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
+        shadowOpacity: 0.4,
         shadowRadius: 8,
         elevation: 4,
     },
@@ -410,7 +372,6 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontFamily: 'Outfit_600SemiBold',
-        color: colors.onSurface,
         letterSpacing: 0.1,
         marginBottom: 8,
     },
@@ -424,17 +385,13 @@ const styles = StyleSheet.create({
     // Code chip
     codeChip: {
         alignSelf: 'flex-start',
-        backgroundColor: colors.surfaceContainerHighest,
         borderRadius: 6,
         paddingHorizontal: 8,
         paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: 'rgba(70,69,84,0.3)',
     },
     codeText: {
         fontSize: 11,
         fontFamily: 'Outfit_500Medium',
-        color: colors.onSurfaceVariant,
         letterSpacing: 0.5,
         textTransform: 'uppercase',
     },
@@ -455,12 +412,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
     },
-    statIcon: {
-        fontSize: 13,
-    },
     statLabel: {
         fontSize: 12,
-        color: colors.onSurfaceVariant,
         fontFamily: 'Outfit_500Medium',
         letterSpacing: 0.05,
     },
@@ -471,21 +424,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 4,
         marginTop: 2,
+        paddingLeft: 0,
     },
     hostIcon: {
         fontSize: 11,
     },
     hostLabel: {
         fontSize: 12,
-        color: colors.onSurfaceVariant,
         fontFamily: 'Outfit_500Medium',
     },
 
     // Live badge
     liveBadge: {
-        backgroundColor: 'rgba(147,0,10,0.2)',
         borderWidth: 1,
-        borderColor: colors.errorContainer,
         borderRadius: 999,
         paddingHorizontal: 8,
         paddingVertical: 3,
@@ -493,7 +444,6 @@ const styles = StyleSheet.create({
     liveText: {
         fontSize: 10,
         fontFamily: 'Outfit_700Bold',
-        color: colors.error,
         letterSpacing: 1,
         textTransform: 'uppercase',
     },
@@ -501,7 +451,6 @@ const styles = StyleSheet.create({
     // Divider
     divider: {
         height: 1,
-        backgroundColor: 'rgba(70,69,84,0.2)',
         marginVertical: 4,
     },
 
@@ -511,10 +460,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 6,
+        paddingLeft: 8,
     },
     attendanceLabel: {
         fontSize: 12,
-        color: colors.onSurfaceVariant,
         fontFamily: 'Outfit_500Medium',
         letterSpacing: 0.05,
     },
@@ -526,7 +475,6 @@ const styles = StyleSheet.create({
     progressTrack: {
         width: '100%',
         height: 6,
-        backgroundColor: colors.surfaceContainerHighest,
         borderRadius: 999,
         overflow: 'hidden',
     },
@@ -538,35 +486,19 @@ const styles = StyleSheet.create({
     // FAB
     fab: {
         position: 'absolute',
-        bottom: 100, // sit right above the custom floating tab bar
+        bottom: 100,
         right: 24,
-        backgroundColor: colors.primaryContainer,
+        width: 56,
+        height: 56,
         borderRadius: 999,
-        paddingHorizontal: 20,
-        paddingVertical: 14,
-        flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        shadowColor: colors.primaryContainer,
+        justifyContent: 'center',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
+        shadowOpacity: 0.4,
         shadowRadius: 16,
         elevation: 8,
         borderWidth: 1,
-        borderColor: 'rgba(192,193,255,0.3)',
         zIndex: 40,
-    },
-    fabIcon: {
-        fontSize: 20,
-        color: colors.onPrimaryContainer,
-        fontFamily: 'Outfit_500Medium',
-        lineHeight: 22,
-    },
-    fabLabel: {
-        fontSize: 14,
-        fontFamily: 'Outfit_600SemiBold',
-        color: colors.onPrimaryContainer,
-        letterSpacing: 0.1,
     },
 });
 
