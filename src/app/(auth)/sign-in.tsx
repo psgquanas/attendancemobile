@@ -1,6 +1,7 @@
 import AuthInput from '@/components/auth/AuthInput';
 import SocialButtons from '@/components/auth/SocialButtons';
-import { Outfit } from '@/constants/theme';
+import { Colors, Outfit } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -17,6 +18,9 @@ import { toast } from 'sonner-native';
 
 export default function LoginScreen() {
     const router = useRouter();
+    const { theme } = useAppTheme();
+    const themeColors = Colors[theme];
+    const isDark = theme === 'dark';
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
@@ -61,8 +65,8 @@ export default function LoginScreen() {
 
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="light-content" backgroundColor="#131313" />
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={themeColors.background} />
 
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
@@ -73,8 +77,8 @@ export default function LoginScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.titleSection}>
-                        <Text style={styles.title}>Welcome Back.{'\n'}Sign In To Your Account.</Text>
-                        <Text style={styles.subtitle}>Access your account to manage settings, explore features</Text>
+                        <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back.{'\n'}Sign In To Your Account.</Text>
+                        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Access your account to manage settings, explore features</Text>
                     </View>
 
                     <View style={styles.form}>
@@ -98,24 +102,34 @@ export default function LoginScreen() {
                         />
 
                         <View style={styles.rememberForgotRow}>
-                            <TouchableOpacity style={styles.rememberRow} onPress={() => setRememberMe(p => !p)}>
-                                <View style={[styles.radio, rememberMe && styles.radioSelected]}>
-                                    {rememberMe && <View style={styles.radioDot} />}
+                        <TouchableOpacity style={styles.rememberRow} onPress={() => setRememberMe(p => !p)}>
+                                <View
+                                    style={[
+                                        styles.radio,
+                                        {
+                                            borderColor: themeColors.textSecondary,
+                                        },
+                                        rememberMe && {
+                                            borderColor: themeColors.primary,
+                                        },
+                                    ]}
+                                >
+                                    {rememberMe && <View style={[styles.radioDot, { backgroundColor: themeColors.primary }]} />}
                                 </View>
-                                <Text style={styles.rememberText}>Remember me</Text>
+                                <Text style={[styles.rememberText, { color: themeColors.text }]}>Remember me</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                                <Text style={styles.forgotText}>Forgot password?</Text>
+                                <Text style={[styles.forgotText, { color: themeColors.primary }]}>Forgot password?</Text>
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity
-                            style={[styles.primaryButton, loading && { opacity: 0.6 }]}
+                            style={[styles.primaryButton, { backgroundColor: themeColors.primary }, loading && { opacity: 0.6 }]}
                             onPress={handleLogin}
                             disabled={loading}
                         >
-                            <Text style={styles.primaryButtonText}>
+                            <Text style={[styles.primaryButtonText, { color: themeColors.primaryForeground }]}>
                                 {loading ? 'Logging in...' : 'SIGN IN'}
                             </Text>
                         </TouchableOpacity>
@@ -124,9 +138,9 @@ export default function LoginScreen() {
                     <SocialButtons />
 
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Don't have an account? </Text>
+                        <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account? </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/sign-up')}>
-                            <Text style={styles.footerLink}>Sign Up</Text>
+                            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Sign Up</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -136,7 +150,7 @@ export default function LoginScreen() {
 };
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: '#131313' },
+    safeArea: { flex: 1 },
 
     scrollContent: {
         paddingHorizontal: 24,
@@ -146,19 +160,18 @@ const styles = StyleSheet.create({
     },
 
     titleSection: { gap: 8 },
-    title: { fontFamily: Outfit.bold, fontSize: 32, color: '#E5E2E1', lineHeight: 40, letterSpacing: -0.5 },
-    subtitle: { fontFamily: Outfit.regular, fontSize: 16, color: '#9CA3AF', lineHeight: 24 },
+    title: { fontFamily: Outfit.bold, fontSize: 32, lineHeight: 40, letterSpacing: -0.5 },
+    subtitle: { fontFamily: Outfit.regular, fontSize: 16, lineHeight: 24 },
     form: { gap: 16 },
     rememberForgotRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#9CA3AF', alignItems: 'center', justifyContent: 'center' },
-    radioSelected: { borderColor: '#F5C518' },
+    radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
     radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#F5C518' },
-    rememberText: { fontFamily: Outfit.medium, fontSize: 14, color: '#E5E2E1' },
-    forgotText: { fontFamily: Outfit.bold, fontSize: 14, color: '#F5C518' },
-    primaryButton: { height: 56, backgroundColor: '#F5C518', borderRadius: 9999, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-    primaryButtonText: { fontFamily: Outfit.bold, fontSize: 14, color: '#1A1400', letterSpacing: 2 },
+    rememberText: { fontFamily: Outfit.medium, fontSize: 14 },
+    forgotText: { fontFamily: Outfit.bold, fontSize: 14 },
+    primaryButton: { height: 56, borderRadius: 9999, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+    primaryButtonText: { fontFamily: Outfit.bold, fontSize: 14, letterSpacing: 2 },
     footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 8 },
-    footerText: { fontFamily: Outfit.regular, fontSize: 16, color: '#9CA3AF' },
-    footerLink: { fontFamily: Outfit.bold, fontSize: 16, color: '#F5C518' },
+    footerText: { fontFamily: Outfit.regular, fontSize: 16 },
+    footerLink: { fontFamily: Outfit.bold, fontSize: 16 },
 });

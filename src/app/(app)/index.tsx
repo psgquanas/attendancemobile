@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Bell,
   CalendarDays,
-  ChevronRight,
   CircleCheck,
   Clock,
   FileText,
@@ -24,6 +23,7 @@ import {
 
 import { authClient } from '@/lib/auth-client';
 import { Colors, Outfit } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 
 type Palette = (typeof Colors)[keyof typeof Colors];
 
@@ -172,8 +172,8 @@ function HistoryCard({
 
 export default function DashboardScreen() {
   const { data: session, isPending } = authClient.useSession();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const { theme: colorMode } = useAppTheme();
+  const colors = Colors[colorMode];
 
   if (isPending) {
     return (

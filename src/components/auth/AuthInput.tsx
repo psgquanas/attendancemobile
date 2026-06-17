@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 
 
-import { Outfit } from '@/constants/theme';
+import { Colors, Outfit } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 
 interface AuthInputProps extends TextInputProps {
     label: string;
@@ -26,20 +27,26 @@ export default function AuthInput({
 }: AuthInputProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    const { theme } = useAppTheme();
+    const colors = Colors[theme];
 
     return (
         <View style={styles.wrapper}>
-            <Text style={styles.label}>{label}</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
             <View
                 style={[
                     styles.inputContainer,
-                    isFocused && styles.inputContainerFocused,
-                    !!error && styles.inputContainerError,
+                    {
+                        backgroundColor: colors.backgroundElement,
+                        borderColor: colors.backgroundSelected,
+                    },
+                    isFocused && { borderColor: colors.primary, backgroundColor: colors.backgroundElement },
+                    !!error && { borderColor: colors.destructive },
                 ]}
             >
                 <TextInput
-                    style={styles.input}
-                    placeholderTextColor="#6B6B6B"
+                    style={[styles.input, { color: colors.text }]}
+                    placeholderTextColor={colors.textSecondary}
                     secureTextEntry={isPassword && !showPassword}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
@@ -52,13 +59,15 @@ export default function AuthInput({
                         style={styles.eyeButton}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.eyeIcon}>
-                            {showPassword ? <EyeOff color="#ffffff" /> : <Eye color="#ffffff" />}
-                        </Text>
+                        {showPassword ? (
+                            <EyeOff color={colors.textSecondary} size={18} />
+                        ) : (
+                            <Eye color={colors.textSecondary} size={18} />
+                        )}
                     </TouchableOpacity>
                 )}
             </View>
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
+            {!!error && <Text style={[styles.errorText, { color: colors.destructive }]}>{error}</Text>}
         </View>
     );
 }
@@ -70,42 +79,28 @@ const styles = StyleSheet.create({
     label: {
         fontFamily: Outfit.medium,
         fontSize: 13,
-        color: '#9CA3AF',
         letterSpacing: 0.5,
         paddingLeft: 4,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#2A2A2A',
         borderRadius: 14,
-        borderWidth: 2,
-        borderColor: 'transparent',
+        borderWidth: 1.5,
         height: 56,
-        paddingHorizontal: 11,
-    },
-    inputContainerFocused: {
-        borderColor: '#F5C518',
-    },
-    inputContainerError: {
-        borderColor: '#EF4444',
+        paddingHorizontal: 14,
     },
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#E5E2E1',
         fontFamily: Outfit.regular,
     },
     eyeButton: {
         padding: 4,
     },
-    eyeIcon: {
-        fontSize: 18,
-    },
     errorText: {
         fontFamily: Outfit.regular,
         fontSize: 12,
-        color: '#EF4444',
         paddingLeft: 4,
     },
 });

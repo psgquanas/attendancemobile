@@ -5,9 +5,8 @@ import {
   GraduationCap,
   House,
   ScanBarcode,
-  User,
+  Settings,
 } from 'lucide-react-native';
-import { useColorScheme } from 'react-native';
 import {
   Pressable,
   StyleSheet,
@@ -16,12 +15,12 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 
-const VISIBLE_TABS = ['index', 'classes', 'check-in', 'reports', 'profile'];
+const VISIBLE_TABS = ['index', 'classes', 'check-in', 'reports', 'settings'];
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const scheme = useColorScheme();
-  const colorMode = scheme === 'dark' ? 'dark' : 'light';
+  const { theme: colorMode } = useAppTheme();
   const colors = Colors[colorMode];
   const isDark = colorMode === 'dark';
 
@@ -30,9 +29,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       style={[
         styles.tabBarContainer,
         {
-          backgroundColor: colors.backgroundElement,
-          borderColor: colors.border,
-          shadowColor: isDark ? '#000000' : colors.primary,
+          backgroundColor: isDark ? '#1C1C1C' : '#FFFFFF',
+          borderTopColor: isDark ? '#2A2A2A' : '#F0F0F0',
+          shadowColor: '#000000',
         },
       ]}
     >
@@ -50,7 +49,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             target: route.key,
             canPreventDefault: true,
           });
-
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name, route.params);
           }
@@ -63,18 +61,21 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           });
         };
 
+        const activeColor = colors.primary;
+        const inactiveColor = isDark ? '#666666' : '#AAAAAA';
+
         const iconColor = isCenterTab
           ? colors.primaryForeground
           : isFocused
-            ? colors.primaryForeground
-            : colors.textSecondary;
+            ? activeColor
+            : inactiveColor;
 
         const icon = options.tabBarIcon
           ? options.tabBarIcon({
-              focused: isFocused,
-              color: iconColor,
-              size: isCenterTab ? 24 : 20,
-            })
+            focused: isFocused,
+            color: iconColor,
+            size: isCenterTab ? 22 : 22,
+          })
           : null;
 
         if (isCenterTab) {
@@ -96,14 +97,15 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 style={[
                   styles.centerButton,
                   {
-                    backgroundColor: colors.secondary,
-                    borderColor: colors.background,
-                    shadowColor: colors.secondary,
+                    backgroundColor: colors.primary,
+                    shadowColor: colors.primary,
                   },
                   isFocused && {
-                    borderColor: colors.primaryMuted,
-                    shadowOpacity: isDark ? 0.58 : 0.24,
-                    transform: [{ translateY: -2 }, { scale: 1.03 }],
+                    shadowOpacity: 0.45,
+                    transform: [{ scale: 1.04 }],
+                  },
+                  !isFocused && {
+                    shadowOpacity: 0.2,
                   },
                 ]}
               >
@@ -127,26 +129,16 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               pressed && styles.pressed,
             ]}
           >
-            <View style={styles.regularTab}>
-              <View
-                style={[
-                  styles.iconShell,
-                  isFocused && {
-                    backgroundColor: colors.primary,
-                    shadowColor: colors.primary,
-                  },
-                ]}
-              >
-                {icon}
-              </View>
+            <View style={styles.tabContent}>
+              {icon}
               <Text
                 style={[
                   styles.tabLabel,
                   {
-                    color: isFocused ? colors.primary : colors.textSecondary,
+                    color: isFocused ? activeColor : inactiveColor,
                     fontFamily: isFocused
-                      ? 'Outfit_700Bold'
-                      : 'Outfit_600SemiBold',
+                      ? 'Outfit_600SemiBold'
+                      : 'Outfit_400Regular',
                   },
                 ]}
                 numberOfLines={1}
@@ -162,9 +154,8 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colorMode = scheme === 'dark' ? 'dark' : 'light';
-  const colors = Colors[colorMode];
+  const { theme: colorMode } = useAppTheme();
+  const isDark = colorMode === 'dark';
 
   return (
     <Tabs
@@ -172,8 +163,8 @@ export default function AppTabs() {
       screenOptions={{
         headerShown: false,
         sceneStyle: {
-          backgroundColor: colors.background,
-          paddingBottom: 108,
+          backgroundColor: isDark ? Colors.dark.background : Colors.light.background,
+          paddingBottom: 80,
         },
       }}
     >
@@ -214,11 +205,11 @@ export default function AppTabs() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="settings"
         options={{
-          title: 'Profile',
+          title: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <User size={size} color={color} strokeWidth={1.6} />
+            <Settings size={size} color={color} strokeWidth={1.6} />
           ),
         }}
       />
@@ -232,62 +223,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 12,
-    minHeight: 84,
-    borderRadius: 32,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingTop: 10,
-    paddingBottom: 12,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.16,
-    shadowRadius: 30,
-    elevation: 22,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 80,
+    borderTopWidth: 1,
+    paddingHorizontal: 4,
+    paddingBottom: 16,
+    paddingTop: 8,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 16,
   },
   tabItemBase: {
     flex: 1,
-    minHeight: 60,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  regularTab: {
+  tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-  },
-  iconShell: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerSlot: {
-    flex: 1.1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 66,
-  },
-  centerButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 10,
+    gap: 3,
   },
   tabLabel: {
-    fontSize: 11,
-    letterSpacing: 0.15,
+    fontSize: 10,
+    letterSpacing: 0.1,
+  },
+  centerSlot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 56,
+    // Lift the button above the bar
+    marginTop: -28,
+  },
+  centerButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 12,
   },
   pressed: {
-    opacity: 0.84,
+    opacity: 0.75,
   },
 });

@@ -14,7 +14,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AuthInput from '@/components/auth/AuthInput';
-import { Outfit } from '@/constants/theme';
+import { Colors, Outfit } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 
 interface FormState {
     email: string;
@@ -26,6 +27,9 @@ interface FormErrors extends Partial<FormState> { }
 
 export default function RegisterScreen() {
     const router = useRouter();
+    const { theme } = useAppTheme();
+    const themeColors = Colors[theme];
+    const isDark = theme === 'dark';
     const [form, setForm] = useState<FormState>({
         email: '',
         password: '',
@@ -66,8 +70,8 @@ export default function RegisterScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="light-content" backgroundColor="#131313" />
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={themeColors.background} />
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -76,10 +80,16 @@ export default function RegisterScreen() {
                 <View style={styles.header}>
                     <TouchableOpacity
                         onPress={() => router.back()}
-                        style={styles.backButton}
+                        style={[
+                            styles.backButton,
+                            {
+                                backgroundColor: themeColors.backgroundElement,
+                                borderColor: themeColors.backgroundSelected,
+                            },
+                        ]}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.backArrow}>←</Text>
+                        <Text style={[styles.backArrow, { color: themeColors.text }]}>←</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -90,8 +100,8 @@ export default function RegisterScreen() {
                 >
                     {/* Title */}
                     <View style={styles.titleSection}>
-                        <Text style={styles.title}>Sign Up To {'\n'}Chekdly.</Text>
-                        <Text style={styles.subtitle}>Create a new account to explore.</Text>
+                        <Text style={[styles.title, { color: themeColors.text }]}>Sign Up To {'\n'}Chekdly.</Text>
+                        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Create a new account to explore.</Text>
                     </View>
 
                     {/* Form */}
@@ -130,20 +140,30 @@ export default function RegisterScreen() {
                             onPress={() => setRememberMe(prev => !prev)}
                             activeOpacity={0.8}
                         >
-                            <View style={[styles.radio, rememberMe && styles.radioSelected]}>
+                            <View
+                                style={[
+                                    styles.radio,
+                                    { borderColor: themeColors.textSecondary },
+                                    rememberMe && { borderColor: themeColors.primary },
+                                ]}
+                            >
                                 {rememberMe && <View style={styles.radioDot} />}
                             </View>
-                            <Text style={styles.rememberText}>Remember me</Text>
+                            <Text style={[styles.rememberText, { color: themeColors.text }]}>Remember me</Text>
                         </TouchableOpacity>
 
                         {/* Sign Up Button */}
                         <TouchableOpacity
-                            style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+                            style={[
+                                styles.primaryButton,
+                                { backgroundColor: themeColors.primary },
+                                loading && styles.primaryButtonDisabled,
+                            ]}
                             onPress={handleSignUp}
                             activeOpacity={0.85}
                             disabled={loading}
                         >
-                            <Text style={styles.primaryButtonText}>
+                            <Text style={[styles.primaryButtonText, { color: themeColors.primaryForeground }]}>
                                 {loading ? 'Creating Account...' : 'SIGN UP'}
                             </Text>
                         </TouchableOpacity>
@@ -151,9 +171,9 @@ export default function RegisterScreen() {
 
                     {/* Login link */}
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Already have an account? </Text>
+                        <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Already have an account? </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} activeOpacity={0.7}>
-                            <Text style={styles.footerLink}>Login</Text>
+                            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Login</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -165,7 +185,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#131313',
     },
     flex: {
         flex: 1,
@@ -179,14 +198,13 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#201F1F',
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
     },
     backArrow: {
         fontFamily: Outfit.semiBold,
         fontSize: 20,
-        color: '#E5E2E1',
     },
     scrollContent: {
         paddingHorizontal: 24,
@@ -199,14 +217,12 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: Outfit.bold,
         fontSize: 32,
-        color: '#E5E2E1',
         lineHeight: 40,
         letterSpacing: -0.5,
     },
     subtitle: {
         fontFamily: Outfit.regular,
         fontSize: 16,
-        color: '#9CA3AF',
         lineHeight: 24,
     },
     form: {
@@ -223,12 +239,8 @@ const styles = StyleSheet.create({
         height: 20,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: '#9CA3AF',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    radioSelected: {
-        borderColor: '#F5C518',
     },
     radioDot: {
         width: 10,
@@ -239,11 +251,9 @@ const styles = StyleSheet.create({
     rememberText: {
         fontFamily: Outfit.medium,
         fontSize: 14,
-        color: '#E5E2E1',
     },
     primaryButton: {
         height: 56,
-        backgroundColor: '#F5C518',
         borderRadius: 9999,
         alignItems: 'center',
         justifyContent: 'center',
@@ -255,7 +265,6 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         fontFamily: Outfit.bold,
         fontSize: 14,
-        color: '#1A1400',
         letterSpacing: 2,
     },
     footer: {
@@ -267,11 +276,9 @@ const styles = StyleSheet.create({
     footerText: {
         fontFamily: Outfit.regular,
         fontSize: 16,
-        color: '#9CA3AF',
     },
     footerLink: {
         fontFamily: Outfit.bold,
         fontSize: 16,
-        color: '#F5C518',
     },
 });

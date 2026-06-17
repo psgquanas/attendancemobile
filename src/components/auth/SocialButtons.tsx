@@ -1,4 +1,6 @@
 import { Outfit } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
+import { useAppTheme } from '@/context/theme-context';
 import { authClient } from '@/lib/auth-client';
 import { Loader2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -45,6 +47,8 @@ function GoogleIcon() {
 export default function SocialButtons() {
     const rotation = useSharedValue(0);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const { theme } = useAppTheme();
+    const colors = Colors[theme];
 
     useEffect(() => {
         rotation.value = withRepeat(
@@ -84,13 +88,20 @@ export default function SocialButtons() {
     return (
         <View style={styles.container}>
             <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
+                <View style={[styles.dividerLine, { backgroundColor: colors.backgroundSelected }]} />
+                <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
+                <View style={[styles.dividerLine, { backgroundColor: colors.backgroundSelected }]} />
             </View>
 
             <TouchableOpacity
-                style={[styles.socialButton, googleLoading && styles.socialButtonDisabled]}
+                style={[
+                    styles.socialButton,
+                    {
+                        backgroundColor: colors.backgroundElement,
+                        borderColor: colors.primaryMuted,
+                    },
+                    googleLoading && styles.socialButtonDisabled,
+                ]}
                 onPress={handleGoogleLogin}
                 disabled={googleLoading}
                 activeOpacity={0.8}
@@ -100,13 +111,13 @@ export default function SocialButtons() {
                 {googleLoading ? (
                     <AnimatedLoader
                         size={24}
-                        color="#F5C518"
+                        color={colors.primary}
                         style={animatedStyle}
                     />
                 ) : (
                     <>
                         <GoogleIcon />
-                        <Text style={styles.socialButtonText}>Continue with Google</Text>
+                        <Text style={[styles.socialButtonText, { color: colors.text }]}>Continue with Google</Text>
                     </>
                 )}
             </TouchableOpacity>
@@ -127,12 +138,10 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#353534',
     },
     dividerText: {
         fontFamily: Outfit.semiBold,
         fontSize: 12,
-        color: '#9CA3AF',
         letterSpacing: 1,
     },
     socialButton: {
@@ -141,10 +150,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 12,
         height: 56,
-        backgroundColor: '#2A2A2A',
         borderRadius: 9999,
         borderWidth: 1,
-        borderColor: '#4E4633',
     },
     socialButtonDisabled: {
         opacity: 0.7,
@@ -152,7 +159,6 @@ const styles = StyleSheet.create({
     socialButtonText: {
         fontFamily: Outfit.medium,
         fontSize: 14,
-        color: '#E5E2E1',
         letterSpacing: 0.3,
     },
 });

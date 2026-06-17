@@ -11,6 +11,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Toaster } from 'sonner-native';
+import { AppThemeProvider } from '@/context/theme-context';
 
 
 export default function RootLayout() {
@@ -52,15 +53,17 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }}>
-      </Stack>
-      <Toaster
-        toastOptions={{
-          titleStyle: { fontFamily: 'Outfit_600SemiBold' },
-          descriptionStyle: { fontFamily: 'Outfit_400Regular' },
-        }}
-      />
-    </GestureHandlerRootView>
+    <AppThemeProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+        </Stack>
+        <Toaster
+          toastOptions={{
+            titleStyle: { fontFamily: 'Outfit_600SemiBold' },
+            descriptionStyle: { fontFamily: 'Outfit_400Regular' },
+          }}
+        />
+      </GestureHandlerRootView>
+    </AppThemeProvider>
   );
 }
