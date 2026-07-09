@@ -5,13 +5,16 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "attendancemobile",
+    "scheme": "chekdly",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.chekdly",
+      "userInterfaceStyle": "automatic"
     },
     "android": {
-      "package": "com.attendancemobile",
+      "package": "com.chekdly",
+      "userInterfaceStyle": "automatic",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

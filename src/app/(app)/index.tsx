@@ -1,16 +1,4 @@
-import React from 'react';
-import { Link, Redirect } from 'expo-router';
-import {
-  ActivityIndicator,
-  Dimensions,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link, Redirect } from "expo-router";
 import {
   Bell,
   CalendarDays,
@@ -19,11 +7,22 @@ import {
   FileText,
   MapPin,
   Users,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import React from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { authClient } from '@/lib/auth-client';
-import { Colors, Outfit } from '@/constants/theme';
-import { useAppTheme } from '@/context/theme-context';
+import { Colors, Outfit } from "@/constants/theme";
+import { useAppTheme } from "@/context/theme-context";
+import { authClient } from "@/lib/auth-client";
 
 type Palette = (typeof Colors)[keyof typeof Colors];
 
@@ -47,11 +46,11 @@ type HistoryEntry = {
 };
 
 function formatDisplayDate(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
   }).format(date);
 }
 
@@ -65,8 +64,8 @@ function getDisplayName(session: unknown) {
 
   return (
     typedSession?.user?.name?.trim() ||
-    typedSession?.user?.email?.split('@')[0] ||
-    'Akhmad Maariz'
+    typedSession?.user?.email?.split("@")[0] ||
+    "Akhmad Maariz"
   );
 }
 
@@ -87,13 +86,7 @@ function SectionHeader({
   );
 }
 
-function SummaryCard({
-  tile,
-  colors,
-}: {
-  tile: SummaryTile;
-  colors: Palette;
-}) {
+function SummaryCard({ tile, colors }: { tile: SummaryTile; colors: Palette }) {
   const accent = colors[tile.tint];
 
   return (
@@ -110,9 +103,18 @@ function SummaryCard({
       <View style={[styles.summaryIcon, { backgroundColor: `${accent}14` }]}>
         {tile.icon}
       </View>
-      <Text style={[styles.summaryLabel, { color: colors.text }]}>{tile.label}</Text>
-      <Text style={[styles.summarySubLabel, { color: colors.textSecondary }]}>{tile.sublabel}</Text>
-      <Text style={[styles.summaryValue, { color: tile.muted ? colors.textSecondary : colors.text }]}>
+      <Text style={[styles.summaryLabel, { color: colors.text }]}>
+        {tile.label}
+      </Text>
+      <Text style={[styles.summarySubLabel, { color: colors.textSecondary }]}>
+        {tile.sublabel}
+      </Text>
+      <Text
+        style={[
+          styles.summaryValue,
+          { color: tile.muted ? colors.textSecondary : colors.text },
+        ]}
+      >
         {tile.value}
       </Text>
     </View>
@@ -136,7 +138,9 @@ function HistoryCard({
         },
       ]}
     >
-      <View style={[styles.historyDateBlock, { backgroundColor: colors.primary }]}>
+      <View
+        style={[styles.historyDateBlock, { backgroundColor: colors.primary }]}
+      >
         <Text style={styles.historyDay}>{entry.day}</Text>
         <Text style={styles.historyWeekday}>{entry.weekday}</Text>
       </View>
@@ -144,24 +148,55 @@ function HistoryCard({
       <View style={styles.historyDetails}>
         <View style={styles.historyStatsRow}>
           <View style={styles.historyStat}>
-            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.checkIn}</Text>
-            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Check in</Text>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>
+              {entry.checkIn}
+            </Text>
+            <Text
+              style={[styles.historyStatLabel, { color: colors.textSecondary }]}
+            >
+              Check in
+            </Text>
           </View>
-          <View style={[styles.historyDivider, { backgroundColor: colors.backgroundSelected }]} />
+          <View
+            style={[
+              styles.historyDivider,
+              { backgroundColor: colors.backgroundSelected },
+            ]}
+          />
           <View style={styles.historyStat}>
-            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.checkOut}</Text>
-            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Check out</Text>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>
+              {entry.checkOut}
+            </Text>
+            <Text
+              style={[styles.historyStatLabel, { color: colors.textSecondary }]}
+            >
+              Check out
+            </Text>
           </View>
-          <View style={[styles.historyDivider, { backgroundColor: colors.backgroundSelected }]} />
+          <View
+            style={[
+              styles.historyDivider,
+              { backgroundColor: colors.backgroundSelected },
+            ]}
+          />
           <View style={styles.historyStat}>
-            <Text style={[styles.historyStatValue, { color: colors.text }]}>{entry.totalHours}</Text>
-            <Text style={[styles.historyStatLabel, { color: colors.textSecondary }]}>Total hours</Text>
+            <Text style={[styles.historyStatValue, { color: colors.text }]}>
+              {entry.totalHours}
+            </Text>
+            <Text
+              style={[styles.historyStatLabel, { color: colors.textSecondary }]}
+            >
+              Total hours
+            </Text>
           </View>
         </View>
 
         <View style={styles.historyLocationRow}>
           <MapPin size={13} color={colors.primary} strokeWidth={2} />
-          <Text style={[styles.historyLocation, { color: colors.textSecondary }]} numberOfLines={1}>
+          <Text
+            style={[styles.historyLocation, { color: colors.textSecondary }]}
+            numberOfLines={1}
+          >
             {entry.location}
           </Text>
         </View>
@@ -177,7 +212,10 @@ export default function DashboardScreen() {
 
   if (isPending) {
     return (
-      <SafeAreaView edges={['top']} style={[styles.centered, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        edges={["top"]}
+        style={[styles.centered, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </SafeAreaView>
     );
@@ -189,63 +227,63 @@ export default function DashboardScreen() {
 
   const summaryTiles: SummaryTile[] = [
     {
-      label: 'Check In',
-      sublabel: 'Early',
-      value: '07:58',
+      label: "Check In",
+      sublabel: "Early",
+      value: "07:58",
       icon: <CircleCheck size={18} color={colors.primary} strokeWidth={1.75} />,
-      tint: 'primary',
+      tint: "primary",
     },
     {
-      label: 'Check Out',
-      sublabel: 'Not yet',
-      value: '17:00',
+      label: "Check Out",
+      sublabel: "Not yet",
+      value: "17:00",
       icon: <Clock size={18} color={colors.textSecondary} strokeWidth={1.75} />,
-      tint: 'textSecondary',
+      tint: "textSecondary",
       muted: true,
     },
     {
-      label: 'Absence',
-      sublabel: 'November',
-      value: '3 Day',
+      label: "Absence",
+      sublabel: "November",
+      value: "3 Day",
       icon: <FileText size={18} color={colors.primary} strokeWidth={1.75} />,
-      tint: 'primary',
+      tint: "primary",
     },
     {
-      label: 'Total Attended',
-      sublabel: 'November',
-      value: '15 Day',
+      label: "Total Attended",
+      sublabel: "November",
+      value: "15 Day",
       icon: <Users size={18} color={colors.primary} strokeWidth={1.75} />,
-      tint: 'primary',
+      tint: "primary",
     },
   ];
 
   const history: HistoryEntry[] = [
     {
-      id: '22',
-      day: '22',
-      weekday: 'Wed',
-      checkIn: '07:57',
-      checkOut: '17:00',
-      totalHours: '08:03',
-      location: 'Office, West Jakarta, Indonesia',
+      id: "22",
+      day: "22",
+      weekday: "Wed",
+      checkIn: "07:57",
+      checkOut: "17:00",
+      totalHours: "08:03",
+      location: "Office, West Jakarta, Indonesia",
     },
     {
-      id: '21',
-      day: '21',
-      weekday: 'Tue',
-      checkIn: '08:03',
-      checkOut: '17:08',
-      totalHours: '08:05',
-      location: 'Campus Lab, South Wing',
+      id: "21",
+      day: "21",
+      weekday: "Tue",
+      checkIn: "08:03",
+      checkOut: "17:08",
+      totalHours: "08:05",
+      location: "Campus Lab, South Wing",
     },
     {
-      id: '20',
-      day: '20',
-      weekday: 'Mon',
-      checkIn: '07:59',
-      checkOut: '16:54',
-      totalHours: '07:56',
-      location: 'Main Building, Attendance Desk',
+      id: "20",
+      day: "20",
+      weekday: "Mon",
+      checkIn: "07:59",
+      checkOut: "16:54",
+      totalHours: "07:56",
+      location: "Main Building, Attendance Desk",
     },
   ];
 
@@ -253,7 +291,10 @@ export default function DashboardScreen() {
   const todayLabel = formatDisplayDate(new Date());
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      edges={["top"]}
+      style={[styles.screen, { backgroundColor: colors.background }]}
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -263,8 +304,13 @@ export default function DashboardScreen() {
         <View style={styles.headerBlock}>
           <View style={styles.headerRow}>
             <View style={styles.headerCopy}>
-              <Text style={[styles.greeting, { color: colors.textSecondary }]}>Good Morning,</Text>
-              <Text style={[styles.displayName, { color: colors.text }]} numberOfLines={1}>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+                Good Morning,
+              </Text>
+              <Text
+                style={[styles.displayName, { color: colors.text }]}
+                numberOfLines={1}
+              >
                 {displayName}
               </Text>
             </View>
@@ -288,13 +334,14 @@ export default function DashboardScreen() {
 
           <View style={styles.metaRow}>
             <View style={styles.dateWrap}>
-              <CalendarDays size={14} color={colors.textSecondary} strokeWidth={1.75} />
-              <Text style={[styles.dateText, { color: colors.text }]}>{todayLabel}</Text>
-            </View>
-
-            <View style={[styles.locationChip, { backgroundColor: colors.primary }]}>
-              <MapPin size={13} color={colors.primaryForeground} strokeWidth={2} />
-              <Text style={styles.locationText}>West Jakarta, Indonesia</Text>
+              <CalendarDays
+                size={14}
+                color={colors.textSecondary}
+                strokeWidth={1.75}
+              />
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {todayLabel}
+              </Text>
             </View>
           </View>
         </View>
@@ -311,8 +358,21 @@ export default function DashboardScreen() {
             colors={colors}
             action={
               <Link href="/(navs)/attendance" asChild>
-                <Pressable hitSlop={10} style={({ pressed }) => [styles.sectionAction, { opacity: pressed ? 0.72 : 1 }]}>
-                  <Text style={[styles.sectionActionText, { color: colors.primary }]}>See More</Text>
+                <Pressable
+                  hitSlop={10}
+                  style={({ pressed }) => [
+                    styles.sectionAction,
+                    { opacity: pressed ? 0.72 : 1 },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.sectionActionText,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    See More
+                  </Text>
                 </Pressable>
               </Link>
             }
@@ -335,8 +395,8 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   scroll: {
     flex: 1,
@@ -352,9 +412,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: 12,
   },
   headerCopy: {
@@ -377,18 +437,18 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
     gap: 10,
   },
   dateWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     paddingVertical: 4,
   },
@@ -398,8 +458,8 @@ const styles = StyleSheet.create({
     fontFamily: Outfit.medium,
   },
   locationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
     paddingHorizontal: 14,
@@ -409,16 +469,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontFamily: Outfit.medium,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
 
   summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   summaryCard: {
-    width: (Dimensions.get('window').width - 52) / 2,
+    width: (Dimensions.get("window").width - 52) / 2,
     borderRadius: 22,
     borderWidth: 1,
     padding: 16,
@@ -429,8 +489,8 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   summaryLabel: {
     fontSize: 14,
@@ -443,7 +503,7 @@ const styles = StyleSheet.create({
     fontFamily: Outfit.regular,
   },
   summaryValue: {
-    marginTop: 'auto',
+    marginTop: "auto",
     fontSize: 24,
     lineHeight: 28,
     fontFamily: Outfit.bold,
@@ -454,9 +514,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   sectionTitle: {
@@ -467,7 +527,7 @@ const styles = StyleSheet.create({
   },
   sectionAction: {
     minHeight: 32,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   sectionActionText: {
     fontSize: 13,
@@ -479,18 +539,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   historyCard: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 14,
     borderRadius: 22,
     borderWidth: 1,
     padding: 12,
-    alignItems: 'stretch',
+    alignItems: "stretch",
   },
   historyDateBlock: {
     width: 82,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     paddingHorizontal: 10,
     gap: 4,
@@ -498,29 +558,29 @@ const styles = StyleSheet.create({
   historyDay: {
     fontSize: 28,
     lineHeight: 32,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontFamily: Outfit.bold,
     letterSpacing: -0.6,
   },
   historyWeekday: {
     fontSize: 13,
     lineHeight: 18,
-    color: 'rgba(255, 255, 255, 0.92)',
+    color: "rgba(255, 255, 255, 0.92)",
     fontFamily: Outfit.medium,
   },
   historyDetails: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     gap: 10,
   },
   historyStatsRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
+    flexDirection: "row",
+    alignItems: "stretch",
   },
   historyStat: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 2,
     paddingHorizontal: 4,
   },
@@ -540,8 +600,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   historyLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 6,
   },
@@ -553,9 +613,9 @@ const styles = StyleSheet.create({
   },
 
   footerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
     borderRadius: 22,
     borderWidth: 1,
@@ -569,7 +629,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontFamily: Outfit.medium,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   footerTitle: {
@@ -578,8 +638,8 @@ const styles = StyleSheet.create({
     fontFamily: Outfit.bold,
   },
   footerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
     paddingHorizontal: 14,
@@ -588,7 +648,7 @@ const styles = StyleSheet.create({
   footerButtonText: {
     fontSize: 13,
     lineHeight: 18,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontFamily: Outfit.semiBold,
   },
 });

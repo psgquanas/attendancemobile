@@ -38,17 +38,25 @@ export default function RootLayout() {
     if (isPending || (!loaded && !error)) return;
 
     const inAuthGroup = segment === '(auth)';
+    const isVerifyEmailScreen = segment === '(auth)' && segments[1] === 'verify-email';
+    const emailVerified = session?.user?.emailVerified;
 
     if (userId) {
-      if (inAuthGroup || !segment) {
-        setTimeout(() => router.replace('/(app)'), 0);
+      if (!emailVerified) {
+        if (!isVerifyEmailScreen) {
+          setTimeout(() => router.replace('/(auth)/verify-email'), 0);
+        }
+      } else {
+        if (inAuthGroup || !segment) {
+          setTimeout(() => router.replace('/(app)'), 0);
+        }
       }
     } else {
       if (!inAuthGroup) {
         setTimeout(() => router.replace('/(auth)/sign-in'), 0);
       }
     }
-  }, [userId, isPending, segment, loaded, error]);
+  }, [userId, isPending, segment, segments, loaded, error, session?.user?.emailVerified]);
 
   if (!loaded && !error) return null;
 
