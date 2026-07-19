@@ -67,27 +67,25 @@ export default function RegisterScreen() {
         email: form.email.trim(),
         password: form.password,
         fetchOptions: {
-          onSuccess: () => {
-            toast.success("Account created successfully");
-            router.replace("/(auth)/verify-email");
+          onSuccess: async () => {
+            await authClient.emailOtp.sendVerificationOtp({
+              email: form.email.trim(),
+              type: "email-verification",
+              fetchOptions: {
+                onSuccess: () => {
+                  toast.success("Verification OTP sent to your email");
+                  setLoading(false);
+                  router.push("/(auth)/verify-email");
+                },
+                onError: () => {
+                  toast.error("Internal Server Error");
+                  setLoading(false);
+                },
+              },
+            });
           },
           onError: (ctx) => {
             toast.error(ctx.error?.message || "Registration failed");
-          },
-        },
-      });
-
-      await authClient.emailOtp.sendVerificationOtp({
-        email: form.email.trim(),
-        type: "email-verification",
-        fetchOptions: {
-          onSuccess: () => {
-            toast.success("Verification OTP sent to your email");
-            setLoading(false);
-          },
-          onError: () => {
-            toast.error("Internal Server Error");
-            setLoading(false);
           },
         },
       });
@@ -162,7 +160,7 @@ export default function RegisterScreen() {
 
             <AuthInput
               label="Email Address"
-              placeholder="Enter your email"
+              placeholder="example@st.uew.edu.gh"
               keyboardType="email-address"
               value={form.email}
               onChangeText={update("email")}
@@ -210,18 +208,18 @@ export default function RegisterScreen() {
               activeOpacity={0.85}
               disabled={loading}
             >
-              <Text
-                style={[
-                  styles.primaryButtonText,
-                  { color: themeColors.primaryForeground },
-                ]}
-              >
-                {loading ? (
-                  <ActivityIndicator color={themeColors.primaryForeground} />
-                ) : (
+              {loading ? (
+                <ActivityIndicator color={themeColors.primaryForeground} />
+              ) : (
+                <Text
+                  style={[
+                    styles.primaryButtonText,
+                    { color: themeColors.primaryForeground },
+                  ]}
+                >
                   "SIGN UP"
-                )}
-              </Text>
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
 

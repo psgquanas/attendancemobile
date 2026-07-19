@@ -1,19 +1,16 @@
 import { Colors, Outfit } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
 import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withTiming,
-} from "react-native-reanimated";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { toast } from "sonner-native";
-
-const AnimatedLoader = Animated.createAnimatedComponent(Loader2);
 
 function GoogleIcon() {
   return (
@@ -39,18 +36,9 @@ function GoogleIcon() {
 }
 
 export default function SocialButtons() {
-  const rotation = useSharedValue(0);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { theme } = useAppTheme();
   const colors = Colors[theme];
-
-  useEffect(() => {
-    rotation.value = withRepeat(withTiming(360, { duration: 1000 }), -1);
-  }, [rotation]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
 
   const handleGoogleLogin = async () => {
     if (googleLoading) return;
@@ -112,11 +100,7 @@ export default function SocialButtons() {
         accessibilityLabel="Continue with Google"
       >
         {googleLoading ? (
-          <AnimatedLoader
-            size={24}
-            color={colors.primary}
-            style={animatedStyle}
-          />
+          <ActivityIndicator size={24} color={colors.primary} />
         ) : (
           <>
             <GoogleIcon />
