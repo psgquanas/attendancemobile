@@ -1,7 +1,8 @@
 import { Colors, Outfit } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "expo-router";
-import { Keyboard, QrCode } from "lucide-react-native";
+import { Keyboard, Play, QrCode, ScanLine } from "lucide-react-native";
 import { useEffect, useMemo } from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import {
@@ -33,9 +34,12 @@ const RING_SIZE = BUTTON_SIZE + 64;
 
 export default function CheckInScreen() {
   const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const { theme } = useAppTheme();
   const themeColors = Colors[theme];
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+  const role = (session?.user as any)?.role as string | undefined;
+  const isLecturer = role === "LECTURER";
 
   const scale1 = useSharedValue(1);
   const opacity1 = useSharedValue(0.45);
@@ -163,6 +167,40 @@ export default function CheckInScreen() {
     router.push("/(navs)/manualcode");
   };
 
+  const handlePrimaryAction = () => {
+    if (isPending) {
+      return;
+    }
+
+    if (isLecturer) {
+      router.push("/(classes)/classeslist");
+      return;
+    }
+
+    openSheet();
+  };
+
+  const actionCopy = isPending
+    ? {
+        title: "Attendance",
+        subtitle: "Loading your check-in options",
+        label: "Loading",
+        hint: "One moment",
+      }
+    : isLecturer
+    ? {
+        title: "Start Attendance",
+        subtitle: "Choose a class and open a live session for students.",
+        label: "Start Session",
+        hint: "Select a class",
+      }
+    : {
+        title: "Check In",
+        subtitle: "Tap the button to mark your attendance",
+        label: "Check In",
+        hint: "Scan or enter code",
+      };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView
@@ -172,12 +210,12 @@ export default function CheckInScreen() {
         {/* Page title */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: themeColors.text }]}>
-            Check In
+            {actionCopy.title}
           </Text>
           <Text
             style={[styles.headerSub, { color: themeColors.textSecondary }]}
           >
-            Tap the button to mark your attendance
+            {actionCopy.subtitle}
           </Text>
         </View>
 
@@ -199,40 +237,69 @@ export default function CheckInScreen() {
           />
 
           <Pressable
-            onPress={openSheet}
+            disabled={isPending}
+            onPress={handlePrimaryAction}
             style={({ pressed }) => [
               styles.checkInBtn,
-              { backgroundColor: themeColors.primary },
-              pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+              {
+                backgroundColor: themeColors.backgroundElement,
+                borderColor: themeColors.border,
+                shadowColor: themeColors.primary,
+              },
+              isPending && { opacity: 0.72 },
+              pressed && { opacity: 0.86, transform: [{ scale: 0.98 }] },
             ]}
           >
-            <Text
+            <View
               style={[
-                styles.checkInIcon,
-                { color: themeColors.primaryForeground },
+                styles.checkInIconWrap,
+                { backgroundColor: themeColors.primary },
               ]}
             >
-              ✓
-            </Text>
+              {isLecturer ? (
+                <Play
+                  size={34}
+                  color={themeColors.primaryForeground}
+                  fill={themeColors.primaryForeground}
+                  strokeWidth={1.8}
+                />
+              ) : (
+                <ScanLine
+                  size={36}
+                  color={themeColors.primaryForeground}
+                  strokeWidth={1.8}
+                />
+              )}
+            </View>
             <Text
               style={[
                 styles.checkInLabel,
-                { color: themeColors.primaryForeground },
+                { color: themeColors.text },
               ]}
             >
-              Check In
+              {actionCopy.label}
+            </Text>
+            <Text
+              style={[
+                styles.checkInHint,
+                { color: themeColors.textSecondary },
+              ]}
+            >
+              {actionCopy.hint}
             </Text>
           </Pressable>
         </View>
       </SafeAreaView>
 
-      {/* Dim backdrop */}
-      <Animated.View
-        style={[styles.backdrop, backdropStyle]}
-        animatedProps={animatedProps}
-      >
-        <Pressable style={StyleSheet.absoluteFill} onPress={closeSheet} />
-      </Animated.View>
+      {!isLecturer ? (
+        <>
+          {/* Dim backdrop */}
+          <Animated.View
+            style={[styles.backdrop, backdropStyle]}
+            animatedProps={animatedProps}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeSheet} />
+          </Animated.View>
 
       {/* Draggable bottom sheet */}
       <GestureDetector gesture={panGesture}>
@@ -336,7 +403,9 @@ export default function CheckInScreen() {
             </Pressable>
           </View>
         </Animated.View>
-      </GestureDetector>
+          </GestureDetector>
+        </>
+      ) : null}
     </GestureHandlerRootView>
   );
 }
@@ -375,26 +444,34 @@ const createStyles = (colors: any) =>
       borderWidth: 2.5,
     },
     checkInBtn: {
-      width: BUTTON_SIZE,
-      height: BUTTON_SIZE,
-      borderRadius: BUTTON_SIZE / 2,
+      width: BUTTON_SIZE + 32,
+      minHeight: BUTTON_SIZE + 22,
+      borderRadius: 32,
+      borderWidth: 1,
       alignItems: "center",
       justifyContent: "center",
-      gap: 4,
+      gap: 7,
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.5,
-      shadowRadius: 24,
-      elevation: 16,
+      shadowOpacity: 0.14,
+      shadowRadius: 20,
+      elevation: 10,
     },
-    checkInIcon: {
-      fontSize: 40,
-      lineHeight: 46,
-      fontFamily: Outfit.bold,
+    checkInIconWrap: {
+      width: 68,
+      height: 68,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
     },
     checkInLabel: {
-      fontFamily: Outfit.semiBold,
-      fontSize: 13,
-      letterSpacing: 0.4,
+      fontFamily: Outfit.bold,
+      fontSize: 18,
+      letterSpacing: -0.2,
+    },
+    checkInHint: {
+      fontFamily: Outfit.medium,
+      fontSize: 12,
+      letterSpacing: 0.3,
     },
 
     // ── Backdrop ──────────────────────────────────────────────────────

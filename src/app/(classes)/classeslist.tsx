@@ -1,14 +1,6 @@
 import { Stack, useRouter } from "expo-router";
-import {
-  BookOpen,
-  CheckCircle2,
-  Clock3,
-  GraduationCap,
-  Radio,
-  Search,
-  Users,
-} from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { BookOpen, GraduationCap, Search, Users } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -58,6 +50,7 @@ function mapOwnedClass(item: any): ClassListItem {
     code: item.code ?? "NO-CODE",
     description: item.description,
     createdAt: item.createdAt,
+    lecturerName: item.lecturer?.name ?? item.owner?.name ?? item.host ?? "You",
     members: normalizeNumber(item._count?.students ?? item.members),
     sessions: normalizeNumber(item.sessions),
     attendance: clampPercent(normalizeNumber(item.avgAttendance)),
@@ -80,40 +73,14 @@ function mapJoinedClass(item: any): ClassListItem {
   };
 }
 
-function Metric({
-  label,
-  value,
-  colors,
-}: {
-  label: string;
-  value: string;
-  colors: Palette;
-}) {
-  return (
-    <View style={styles.metric}>
-      <Text style={[styles.metricValue, { color: colors.text }]} selectable>
-        {value}
-      </Text>
-      <Text
-        style={[styles.metricLabel, { color: colors.textSecondary }]}
-        selectable
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 function ClassCard({
   item,
   colors,
-  roleLabel,
   isLecturer,
   onPress,
 }: {
   item: ClassListItem;
   colors: Palette;
-  roleLabel: string;
   isLecturer: boolean;
   onPress: () => void;
 }) {
@@ -124,85 +91,59 @@ function ClassCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.classCard,
-        {
-          backgroundColor: colors.backgroundElement,
-          borderColor: colors.backgroundSelected,
-          opacity: pressed ? 0.92 : 1,
-          transform: [{ scale: pressed ? 0.99 : 1 }],
-        },
+        { opacity: pressed ? 0.6 : 1 },
       ]}
     >
-      <View style={styles.classHeader}>
+      <View style={styles.classRow}>
+        {isLecturer ? (
+          <GraduationCap
+            size={16}
+            color={colors.textSecondary}
+            strokeWidth={1.75}
+          />
+        ) : (
+          <BookOpen size={16} color={colors.textSecondary} strokeWidth={1.75} />
+        )}
+
+        <Text
+          style={[styles.classTitle, { color: colors.text }]}
+          numberOfLines={1}
+          selectable
+        >
+          {item.name}
+        </Text>
+
+        <Text
+          style={[styles.attendanceValue, { color: colors.text }]}
+          selectable
+        >
+          {progressValue}%
+        </Text>
+      </View>
+
+      <Text
+        style={[styles.classSubline, { color: colors.textSecondary }]}
+        numberOfLines={1}
+        selectable
+      >
+        {item.lecturerName}
+      </Text>
+
+      <View
+        style={[
+          styles.progressTrack,
+          { backgroundColor: colors.backgroundSelected },
+        ]}
+      >
         <View
           style={[
-            styles.classMark,
+            styles.progressFill,
             {
-              backgroundColor: isLecturer
-                ? colors.primaryMuted
-                : `${colors.secondary}18`,
+              width: `${progressValue}%`,
+              backgroundColor: colors.primary,
             },
           ]}
-        >
-          {isLecturer ? (
-            <GraduationCap size={19} color={colors.primary} strokeWidth={2} />
-          ) : (
-            <BookOpen size={19} color={colors.secondary} strokeWidth={2} />
-          )}
-        </View>
-
-        <View style={styles.classTitleBlock}>
-          <View style={styles.classTopLine}>
-            <Text
-              style={[styles.classTitle, { color: colors.text }]}
-              numberOfLines={1}
-              selectable
-            >
-              {item.name}
-            </Text>
-            {item.isLive ? (
-              <View
-                style={[
-                  styles.livePill,
-                  {
-                    backgroundColor: `${colors.destructive}14`,
-                    borderColor: colors.destructive,
-                  },
-                ]}
-              >
-                <Radio size={10} color={colors.destructive} strokeWidth={2.4} />
-                <Text
-                  style={[styles.liveText, { color: colors.destructive }]}
-                  selectable
-                >
-                  Live
-                </Text>
-              </View>
-            ) : null}
-          </View>
-
-          <Text
-            style={[styles.classSubline, { color: colors.textSecondary }]}
-            numberOfLines={1}
-            selectable
-          >
-            {isLecturer ? roleLabel : `Lecturer: ${item.lecturerName}`}
-          </Text>
-
-          <View
-            style={[
-              styles.metricsRow,
-              { backgroundColor: colors.background, borderColor: colors.backgroundSelected },
-            ]}
-          >
-            <Metric
-              label={isLecturer ? "Students" : "Classmates"}
-              value={String(item.members)}
-              colors={colors}
-            />
-            <Metric label="Sessions" value={String(item.sessions)} colors={colors} />
-            <Metric label="Attendance" value={`${progressValue}%`} colors={colors} />
-          </View>
-        </View>
+        />
       </View>
     </Pressable>
   );
@@ -227,7 +168,9 @@ function EmptyState({
         },
       ]}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: colors.primaryMuted }]}>
+      <View
+        style={[styles.emptyIcon, { backgroundColor: colors.primaryMuted }]}
+      >
         <BookOpen size={24} color={colors.primary} strokeWidth={2} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]} selectable>
@@ -237,7 +180,10 @@ function EmptyState({
             ? "No created classes yet"
             : "No joined classes yet"}
       </Text>
-      <Text style={[styles.emptyCopy, { color: colors.textSecondary }]} selectable>
+      <Text
+        style={[styles.emptyCopy, { color: colors.textSecondary }]}
+        selectable
+      >
         {hasSearch
           ? "Try a different class name, lecturer, or code."
           : isLecturer
@@ -264,15 +210,15 @@ export default function ClassesListScreen() {
   const roleCopy = isLecturer
     ? {
         title: "Created classes",
-        subtitle: "Monitor the classes you own, recent activity, and attendance health.",
+        subtitle:
+          "Monitor the classes you own, recent activity, and attendance health.",
         kicker: "Lecturer workspace",
-        statLabel: "Created",
       }
     : {
         title: "Joined classes",
-        subtitle: "Keep track of every class you are enrolled in and what needs attention.",
+        subtitle:
+          "Keep track of every class you are enrolled in and what needs attention.",
         kicker: "Student workspace",
-        statLabel: "Joined",
       };
 
   const loadClasses = useCallback(
@@ -328,15 +274,6 @@ export default function ClassesListScreen() {
     });
   }, [classes, query]);
 
-  const liveCount = classes.filter((item) => item.isLive).length;
-  const averageAttendance =
-    classes.length === 0
-      ? 0
-      : Math.round(
-          classes.reduce((total, item) => total + item.attendance, 0) /
-            classes.length,
-        );
-
   return (
     <SafeAreaView
       style={[styles.screen, { backgroundColor: colors.background }]}
@@ -361,7 +298,10 @@ export default function ClassesListScreen() {
         <View style={styles.hero}>
           <View style={styles.heroTop}>
             <View style={styles.heroCopy}>
-              <Text style={[styles.kicker, { color: colors.primary }]} selectable>
+              <Text
+                style={[styles.kicker, { color: colors.primary }]}
+                selectable
+              >
                 {roleCopy.kicker}
               </Text>
               <Text style={[styles.title, { color: colors.text }]} selectable>
@@ -386,7 +326,11 @@ export default function ClassesListScreen() {
               ]}
             >
               {isLecturer ? (
-                <GraduationCap size={15} color={colors.primary} strokeWidth={2} />
+                <GraduationCap
+                  size={15}
+                  color={colors.primary}
+                  strokeWidth={2}
+                />
               ) : (
                 <Users size={15} color={colors.secondary} strokeWidth={2} />
               )}
@@ -398,72 +342,6 @@ export default function ClassesListScreen() {
                 selectable
               >
                 {isLecturer ? "Lecturer" : "Student"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.summaryGrid}>
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: colors.backgroundElement,
-                  borderColor: colors.backgroundSelected,
-                },
-              ]}
-            >
-              <CheckCircle2 size={18} color={colors.primary} strokeWidth={2.2} />
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {classes.length}
-              </Text>
-              <Text
-                style={[styles.summaryLabel, { color: colors.textSecondary }]}
-              >
-                {roleCopy.statLabel}
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: colors.backgroundElement,
-                  borderColor: colors.backgroundSelected,
-                },
-              ]}
-            >
-              <Radio
-                size={18}
-                color={liveCount > 0 ? colors.destructive : colors.textSecondary}
-                strokeWidth={2.2}
-              />
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {liveCount}
-              </Text>
-              <Text
-                style={[styles.summaryLabel, { color: colors.textSecondary }]}
-              >
-                Live now
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: colors.backgroundElement,
-                  borderColor: colors.backgroundSelected,
-                },
-              ]}
-            >
-              <Clock3 size={18} color={colors.secondary} strokeWidth={2.2} />
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {averageAttendance}%
-              </Text>
-              <Text
-                style={[styles.summaryLabel, { color: colors.textSecondary }]}
-              >
-                Avg attendance
               </Text>
             </View>
           </View>
@@ -521,7 +399,6 @@ export default function ClassesListScreen() {
                 key={item.id}
                 item={item}
                 colors={colors}
-                roleLabel="Created by you"
                 isLecturer={isLecturer}
                 onPress={() =>
                   router.push({
@@ -664,10 +541,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   classCard: {
-    borderWidth: 1,
-    borderRadius: 24,
-    borderCurve: "continuous",
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255,255,255,0.08)",
+    gap: 8,
+  },
+  classRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  classTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Outfit_500Medium",
+    letterSpacing: -0.2,
   },
   classHeader: {
     flexDirection: "row",
@@ -684,69 +573,34 @@ const styles = StyleSheet.create({
   },
   classTitleBlock: {
     flex: 1,
-    gap: 8,
+    gap: 4,
   },
   classTopLine: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    gap: 12,
   },
-  classTitle: {
-    flex: 1,
-    fontFamily: Outfit.semiBold,
-    fontSize: 17,
-    lineHeight: 23,
-    letterSpacing: -0.2,
+  attendanceValue: {
+    fontSize: 13,
+    fontFamily: "Outfit_500Medium",
+    fontVariant: ["tabular-nums"],
+    opacity: 0.9,
   },
   classSubline: {
-    fontFamily: Outfit.regular,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    fontFamily: "Outfit_400Regular",
+    paddingLeft: 26,
   },
-  livePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  progressTrack: {
+    height: 2,
+    borderRadius: 1,
+    overflow: "hidden",
+    marginLeft: 26,
   },
-  liveText: {
-    fontFamily: Outfit.bold,
-    fontSize: 10,
-    lineHeight: 12,
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-  metricsRow: {
-    flexDirection: "row",
-    alignSelf: "stretch",
-    alignItems: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 16,
-    borderCurve: "continuous",
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    gap: 6,
-  },
-  metric: {
-    flex: 1,
-    alignItems: "center",
-    gap: 2,
-  },
-  metricValue: {
-    fontFamily: Outfit.bold,
-    fontSize: 16,
-    lineHeight: 20,
-    letterSpacing: -0.2,
-    fontVariant: ["tabular-nums"],
-  },
-  metricLabel: {
-    fontFamily: Outfit.medium,
-    fontSize: 11,
-    lineHeight: 15,
-    textAlign: "center",
+  progressFill: {
+    height: "100%",
+    borderRadius: 1,
   },
   loadingCard: {
     minHeight: 150,

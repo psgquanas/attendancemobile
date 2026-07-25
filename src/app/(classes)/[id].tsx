@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   Clock3,
   GraduationCap,
-  Radio,
+  PlayCircle,
   SearchX,
   UserRound,
   Users,
@@ -77,7 +77,9 @@ function normalizeNumber(value: unknown, fallback = 0) {
 }
 
 function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 
 function clampPercent(value: number) {
@@ -97,7 +99,10 @@ function mapStudent(item: any, index: number): StudentItem {
     id: String(item.id ?? item.studentId ?? item.userId ?? index),
     name: getStudentName(item),
     email: item.email ?? item.student?.email ?? item.user?.email,
-    attendance: typeof item.attendance === "number" ? clampPercent(item.attendance) : undefined,
+    attendance:
+      typeof item.attendance === "number"
+        ? clampPercent(item.attendance)
+        : undefined,
     status: item.status,
   };
 }
@@ -128,9 +133,15 @@ function mapSession(item: any, index: number): SessionItem {
 }
 
 function mapClassDetail(item: any, isLecturer: boolean): ClassDetail {
-  const students = asArray(item.students ?? item.enrollments ?? item.membersList).map(mapStudent);
-  const sessions = asArray(item.sessionList ?? item.attendanceSessions ?? item.sessionsList).map(mapSession);
-  const attendance = asArray(item.attendanceRecords ?? item.attendanceList ?? item.attendanceEntries).map(mapAttendance);
+  const students = asArray(
+    item.students ?? item.enrollments ?? item.membersList,
+  ).map(mapStudent);
+  const sessions = asArray(
+    item.sessionList ?? item.attendanceSessions ?? item.sessionsList,
+  ).map(mapSession);
+  const attendance = asArray(
+    item.attendanceRecords ?? item.attendanceList ?? item.attendanceEntries,
+  ).map(mapAttendance);
 
   return {
     id: String(item.id),
@@ -139,8 +150,10 @@ function mapClassDetail(item: any, isLecturer: boolean): ClassDetail {
     description: item.description,
     lecturerName: isLecturer
       ? "Created by you"
-      : item.lecturer?.name ?? item.host ?? "Lecturer",
-    members: normalizeNumber(item._count?.students ?? item.members ?? students.length),
+      : (item.lecturer?.name ?? item.host ?? "Lecturer"),
+    members: normalizeNumber(
+      item._count?.students ?? item.members ?? students.length,
+    ),
     sessionsCount: normalizeNumber(
       typeof item.sessions === "number" ? item.sessions : sessions.length,
     ),
@@ -208,13 +221,33 @@ function StatTile({
         },
       ]}
     >
-      {icon}
-      <Text style={[styles.statValue, { color: colors.text }]} selectable>
-        {value}
-      </Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]} selectable>
-        {label}
-      </Text>
+      <View style={styles.statTextBlock}>
+        <Text
+          style={[styles.statValue, { color: colors.text }]}
+          numberOfLines={1}
+          selectable
+        >
+          {value}
+        </Text>
+        <Text
+          style={[styles.statLabel, { color: colors.textSecondary }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          selectable
+        >
+          {label}
+        </Text>
+      </View>
+      <View
+        style={[
+          styles.statIcon,
+          {
+            backgroundColor: colors.backgroundSelected,
+          },
+        ]}
+      >
+        {icon}
+      </View>
     </View>
   );
 }
@@ -239,26 +272,36 @@ function TabButton({
         styles.tabButton,
         {
           backgroundColor: active ? colors.primary : "transparent",
-          opacity: pressed ? 0.86 : 1,
+          opacity: pressed ? 0.78 : 1,
         },
       ]}
     >
-      <Text
-        style={[
-          styles.tabLabel,
-          { color: active ? colors.primaryForeground : colors.textSecondary },
-        ]}
-      >
-        {label}
-      </Text>
-      <Text
-        style={[
-          styles.tabCount,
-          { color: active ? colors.primaryForeground : colors.textSecondary },
-        ]}
-      >
-        {count}
-      </Text>
+      <View style={styles.tabLabelRow}>
+        <Text
+          style={[
+            styles.tabLabel,
+            {
+              color: active ? colors.primaryForeground : colors.textSecondary,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        <Text
+          style={[
+            styles.tabCount,
+            {
+              backgroundColor: active
+                ? `${colors.primaryForeground}24`
+                : colors.backgroundSelected,
+              color: active ? colors.primaryForeground : colors.textSecondary,
+            },
+          ]}
+        >
+          {count}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -282,13 +325,18 @@ function EmptyPanel({
         },
       ]}
     >
-      <View style={[styles.emptyIcon, { backgroundColor: colors.primaryMuted }]}>
+      <View
+        style={[styles.emptyIcon, { backgroundColor: colors.primaryMuted }]}
+      >
         <SearchX size={22} color={colors.primary} strokeWidth={2} />
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]} selectable>
         {title}
       </Text>
-      <Text style={[styles.emptyBody, { color: colors.textSecondary }]} selectable>
+      <Text
+        style={[styles.emptyBody, { color: colors.textSecondary }]}
+        selectable
+      >
         {body}
       </Text>
     </View>
@@ -325,19 +373,33 @@ function StudentsTab({
             },
           ]}
         >
-          <View style={[styles.avatar, { backgroundColor: colors.primaryMuted }]}>
+          <View
+            style={[styles.avatar, { backgroundColor: colors.primaryMuted }]}
+          >
             <UserRound size={17} color={colors.primary} strokeWidth={2} />
           </View>
           <View style={styles.rowBody}>
-            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1} selectable>
+            <Text
+              style={[styles.rowTitle, { color: colors.text }]}
+              numberOfLines={1}
+              selectable
+            >
               {student.name}
             </Text>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]} numberOfLines={1} selectable>
+            <Text
+              style={[styles.rowMeta, { color: colors.textSecondary }]}
+              numberOfLines={2}
+              selectable
+            >
               {student.email ?? student.status ?? "Enrolled student"}
             </Text>
           </View>
           {typeof student.attendance === "number" ? (
-            <Pill label={`${student.attendance}%`} colors={colors} tone="secondary" />
+            <Pill
+              label={`${student.attendance}%`}
+              colors={colors}
+              tone="secondary"
+            />
           ) : null}
         </View>
       ))}
@@ -365,12 +427,20 @@ function AttendanceTab({
           ]}
         >
           <View style={styles.attendanceTop}>
-            <Text style={[styles.attendanceValue, { color: colors.text }]} selectable>
+            <Text
+              style={[styles.attendanceValue, { color: colors.text }]}
+              selectable
+            >
               {classDetail.attendanceAverage}%
             </Text>
             <Pill label="Average" colors={colors} tone="secondary" />
           </View>
-          <View style={[styles.progressTrack, { backgroundColor: colors.backgroundSelected }]}>
+          <View
+            style={[
+              styles.progressTrack,
+              { backgroundColor: colors.backgroundSelected },
+            ]}
+          >
             <View
               style={[
                 styles.progressFill,
@@ -381,8 +451,12 @@ function AttendanceTab({
               ]}
             />
           </View>
-          <Text style={[styles.attendanceNote, { color: colors.textSecondary }]} selectable>
-            Detailed attendance records will appear here when the API returns per-student or per-session entries.
+          <Text
+            style={[styles.attendanceNote, { color: colors.textSecondary }]}
+            selectable
+          >
+            Detailed attendance records will appear here when the API returns
+            per-student or per-session entries.
           </Text>
         </View>
       </View>
@@ -402,14 +476,28 @@ function AttendanceTab({
             },
           ]}
         >
-          <View style={[styles.avatar, { backgroundColor: `${colors.secondary}18` }]}>
+          <View
+            style={[
+              styles.avatar,
+              { backgroundColor: `${colors.secondary}18` },
+            ]}
+          >
             <CheckCircle2 size={17} color={colors.secondary} strokeWidth={2} />
           </View>
           <View style={styles.rowBody}>
-            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1} selectable>
+            <Text
+              style={[styles.rowTitle, { color: colors.text }]}
+              numberOfLines={1}
+              selectable
+            >
               {item.studentName ?? item.sessionName ?? "Attendance entry"}
             </Text>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]} numberOfLines={1} selectable>
+            <Text
+              style={[styles.rowMeta, { color: colors.textSecondary }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              selectable
+            >
               {item.sessionName ?? item.status ?? "Recorded attendance"}
             </Text>
           </View>
@@ -454,15 +542,26 @@ function SessionsTab({
             },
           ]}
         >
-          <View style={[styles.avatar, { backgroundColor: `${colors.accent}18` }]}>
+          <View
+            style={[styles.avatar, { backgroundColor: `${colors.accent}18` }]}
+          >
             <CalendarDays size={17} color={colors.accent} strokeWidth={2} />
           </View>
           <View style={styles.rowBody}>
-            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1} selectable>
+            <Text
+              style={[styles.rowTitle, { color: colors.text }]}
+              numberOfLines={1}
+              selectable
+            >
               {session.title}
             </Text>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]} numberOfLines={1} selectable>
-              {typeof session.attendanceCount === "number" && typeof session.totalStudents === "number"
+            <Text
+              style={[styles.rowMeta, { color: colors.textSecondary }]}
+              numberOfLines={1}
+              selectable
+            >
+              {typeof session.attendanceCount === "number" &&
+              typeof session.totalStudents === "number"
                 ? `${session.attendanceCount}/${session.totalStudents} attended`
                 : "Attendance session"}
             </Text>
@@ -471,7 +570,9 @@ function SessionsTab({
             <Pill
               label={session.status}
               colors={colors}
-              tone={session.status.toLowerCase() === "live" ? "danger" : "neutral"}
+              tone={
+                session.status.toLowerCase() === "live" ? "danger" : "neutral"
+              }
             />
           ) : null}
         </View>
@@ -515,9 +616,24 @@ export default function ClassDetailScreen() {
           ...asArray(payload.owned),
           ...asArray(payload.enrolled),
         ];
-        const selected = source.find((item) => String(item.id) === String(classId));
+        const selected = source.find(
+          (item) => String(item.id) === String(classId),
+        );
 
-        setClassDetail(selected ? mapClassDetail(selected, isLecturer) : null);
+        const mappedClass = selected ? mapClassDetail(selected, isLecturer) : null;
+
+        if (mappedClass) {
+          try {
+            const studentsResponse = await api.get(`/api/${classId}/students`);
+            const studentsPayload =
+              studentsResponse.data?.data ?? studentsResponse.data ?? [];
+            mappedClass.students = asArray(studentsPayload).map(mapStudent);
+          } catch (studentError) {
+            console.warn("Failed to fetch students for class", studentError);
+          }
+        }
+
+        setClassDetail(mappedClass);
       } catch (error: any) {
         const message =
           error?.response?.data?.message || "Failed to load class details";
@@ -539,7 +655,8 @@ export default function ClassDetailScreen() {
   const tabCounts = useMemo(
     () => ({
       students: classDetail?.students.length || classDetail?.members || 0,
-      attendance: classDetail?.attendance.length || classDetail?.attendanceAverage || 0,
+      attendance:
+        classDetail?.attendance.length || classDetail?.attendanceAverage || 0,
       sessions: classDetail?.sessions.length || classDetail?.sessionsCount || 0,
     }),
     [classDetail],
@@ -557,6 +674,13 @@ export default function ClassDetailScreen() {
   };
 
   const isBusy = loading || isPending;
+
+  const handleStartSession = () => {
+    router.push({
+      pathname: "/(attendance)/startsession",
+      params: classId ? { classId } : undefined,
+    });
+  };
 
   return (
     <SafeAreaView
@@ -578,20 +702,49 @@ export default function ClassDetailScreen() {
         }
         contentContainerStyle={styles.content}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.backButton,
-            {
-              backgroundColor: colors.backgroundElement,
-              borderColor: colors.backgroundSelected,
-              opacity: pressed ? 0.82 : 1,
-            },
-          ]}
-        >
-          <ArrowLeft size={18} color={colors.text} strokeWidth={2.2} />
-          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
-        </Pressable>
+        <View style={styles.headerRow}>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.backButton,
+              {
+                backgroundColor: colors.backgroundElement,
+                borderColor: colors.backgroundSelected,
+                opacity: pressed ? 0.82 : 1,
+              },
+            ]}
+          >
+            <ArrowLeft size={18} color={colors.text} strokeWidth={2.2} />
+          </Pressable>
+
+          {isLecturer ? (
+            <Pressable
+              onPress={handleStartSession}
+              style={({ pressed }) => [
+                styles.startSessionButton,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: pressed ? 0.84 : 1,
+                },
+              ]}
+            >
+              <PlayCircle
+                size={16}
+                color={colors.primaryForeground}
+                strokeWidth={2.2}
+              />
+              <Text
+                style={[
+                  styles.startSessionText,
+                  { color: colors.primaryForeground },
+                ]}
+                numberOfLines={1}
+              >
+                Start session
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         {isBusy ? (
           <View
@@ -610,44 +763,60 @@ export default function ClassDetailScreen() {
           </View>
         ) : classDetail ? (
           <>
-            <View
-              style={[
-                styles.heroCard,
-                {
-                  backgroundColor: colors.backgroundElement,
-                  borderColor: colors.backgroundSelected,
-                },
-              ]}
-            >
+            <View style={styles.heroCard}>
               <View style={styles.heroTop}>
-                <View style={[styles.heroIcon, { backgroundColor: colors.primaryMuted }]}>
-                  {isLecturer ? (
-                    <GraduationCap size={22} color={colors.primary} strokeWidth={2} />
-                  ) : (
-                    <BookOpen size={22} color={colors.primary} strokeWidth={2} />
-                  )}
-                </View>
-                <View style={styles.heroCopy}>
-                  <Text style={[styles.kicker, { color: colors.primary }]} selectable>
-                    {isLecturer ? "Class workspace" : "Joined class"}
-                  </Text>
-                  <Text style={[styles.title, { color: colors.text }]} selectable>
-                    {classDetail.name}
-                  </Text>
-                  <Text style={[styles.subtitle, { color: colors.textSecondary }]} selectable>
-                    {classDetail.lecturerName}
-                  </Text>
-                </View>
+                {isLecturer ? (
+                  <GraduationCap
+                    size={18}
+                    color={colors.textSecondary}
+                    strokeWidth={1.75}
+                  />
+                ) : (
+                  <BookOpen
+                    size={18}
+                    color={colors.textSecondary}
+                    strokeWidth={1.75}
+                  />
+                )}
+                <Text
+                  style={[styles.kicker, { color: colors.textSecondary }]}
+                  selectable
+                >
+                  {isLecturer ? "Class workspace" : "Joined class"}
+                </Text>
                 {classDetail.isLive ? (
                   <Pill label="Live" colors={colors} tone="danger" />
                 ) : null}
               </View>
 
+              <Text style={[styles.title, { color: colors.text }]} selectable>
+                {classDetail.name}
+              </Text>
+
+              <Text
+                style={[styles.subtitle, { color: colors.textSecondary }]}
+                selectable
+              >
+                {classDetail.lecturerName}
+              </Text>
+
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: colors.backgroundSelected },
+                ]}
+              />
+
               <View style={styles.codeRow}>
-                <Text style={[styles.codeLabel, { color: colors.textSecondary }]}>
+                <Text
+                  style={[styles.codeLabel, { color: colors.textSecondary }]}
+                >
                   Class code
                 </Text>
-                <Text style={[styles.codeValue, { color: colors.text }]} selectable>
+                <Text
+                  style={[styles.codeValue, { color: colors.primary }]}
+                  selectable
+                >
                   {classDetail.code}
                 </Text>
               </View>
@@ -657,19 +826,29 @@ export default function ClassDetailScreen() {
               <StatTile
                 label={isLecturer ? "Students" : "Classmates"}
                 value={String(classDetail.members)}
-                icon={<Users size={18} color={colors.primary} strokeWidth={2.2} />}
+                icon={
+                  <Users size={18} color={colors.primary} strokeWidth={2.2} />
+                }
                 colors={colors}
               />
               <StatTile
                 label="Sessions"
                 value={String(classDetail.sessionsCount)}
-                icon={<Clock3 size={18} color={colors.accent} strokeWidth={2.2} />}
+                icon={
+                  <Clock3 size={18} color={colors.accent} strokeWidth={2.2} />
+                }
                 colors={colors}
               />
               <StatTile
                 label="Attendance"
                 value={`${classDetail.attendanceAverage}%`}
-                icon={<CheckCircle2 size={18} color={colors.secondary} strokeWidth={2.2} />}
+                icon={
+                  <CheckCircle2
+                    size={18}
+                    color={colors.secondary}
+                    strokeWidth={2.2}
+                  />
+                }
                 colors={colors}
               />
             </View>
@@ -733,8 +912,15 @@ const styles = StyleSheet.create({
     paddingBottom: 44,
     gap: 16,
   },
+  headerRow: {
+    minHeight: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   backButton: {
-    alignSelf: "flex-start",
+    flexShrink: 0,
     minHeight: 40,
     flexDirection: "row",
     alignItems: "center",
@@ -748,88 +934,115 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  startSessionButton: {
+    minHeight: 40,
+    maxWidth: 176,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+  },
+  startSessionText: {
+    flexShrink: 1,
+    fontFamily: Outfit.semiBold,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: 0.1,
+  },
   heroCard: {
-    borderWidth: 1,
-    borderRadius: 26,
-    borderCurve: "continuous",
-    padding: 18,
-    gap: 18,
+    paddingVertical: 20,
+    gap: 6,
   },
   heroTop: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  heroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 18,
-    borderCurve: "continuous",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  kicker: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: "Outfit_500Medium",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   heroCopy: {
     flex: 1,
     gap: 5,
   },
-  kicker: {
-    fontFamily: Outfit.semiBold,
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
   title: {
-    fontFamily: Outfit.bold,
-    fontSize: 28,
-    lineHeight: 33,
-    letterSpacing: -0.5,
+    fontSize: 22,
+    fontFamily: "Outfit_600SemiBold",
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: Outfit.regular,
     fontSize: 14,
-    lineHeight: 20,
+    fontFamily: "Outfit_400Regular",
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 14,
   },
   codeRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
   },
   codeLabel: {
-    fontFamily: Outfit.medium,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    fontFamily: "Outfit_400Regular",
   },
   codeValue: {
-    fontFamily: Outfit.bold,
-    fontSize: 14,
-    lineHeight: 18,
-    letterSpacing: 0.8,
+    fontSize: 15,
+    fontFamily: "Outfit_500Medium",
+    letterSpacing: 1.5, // gives class codes a "code" feel without a monospace font
   },
   statsGrid: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
   },
   statTile: {
     flex: 1,
+    minHeight: 82,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     borderCurve: "continuous",
-    padding: 13,
-    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    justifyContent: "flex-end",
+    gap: 10,
   },
-  statValue: {
-    fontFamily: Outfit.bold,
-    fontSize: 21,
-    lineHeight: 25,
-    letterSpacing: -0.3,
-    fontVariant: ["tabular-nums"],
+  statIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    borderCurve: "continuous",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statTextBlock: {
+    minHeight: 48,
+    paddingRight: 30,
+    justifyContent: "flex-end",
+    gap: 2,
   },
   statLabel: {
-    fontFamily: Outfit.medium,
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 15,
+    fontFamily: "Outfit_500Medium",
+    letterSpacing: 0.2,
+  },
+  statValue: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontFamily: Outfit.semiBold,
+    letterSpacing: -0.45,
+    fontVariant: ["tabular-nums"],
   },
   tabs: {
     flexDirection: "row",
@@ -841,22 +1054,37 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    minHeight: 42,
-    alignItems: "center",
+    minHeight: 44,
     justifyContent: "center",
+    alignItems: "center",
     borderRadius: 14,
     borderCurve: "continuous",
-    gap: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 9,
+  },
+  tabLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    width: "100%",
   },
   tabLabel: {
+    flexShrink: 1,
+    fontSize: 13,
+    lineHeight: 18,
     fontFamily: Outfit.semiBold,
-    fontSize: 12,
-    lineHeight: 16,
   },
   tabCount: {
-    fontFamily: Outfit.medium,
+    minWidth: 22,
+    overflow: "hidden",
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    textAlign: "center",
     fontSize: 11,
-    lineHeight: 13,
+    lineHeight: 14,
+    fontFamily: Outfit.bold,
     fontVariant: ["tabular-nums"],
   },
   panelList: {
