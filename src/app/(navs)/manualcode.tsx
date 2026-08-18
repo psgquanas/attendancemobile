@@ -33,6 +33,10 @@ import { toast } from "sonner-native";
 
 import { Colors, Outfit } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
+import {
+  apiErrorMessage,
+  checkInWithManualCode,
+} from "@/lib/attendance-check-in";
 
 const CODE_LENGTH = 6;
 type Palette = typeof Colors.light | typeof Colors.dark;
@@ -71,17 +75,16 @@ export default function ManualCodeScreen() {
 
   const isComplete = code.length === CODE_LENGTH;
 
-  const submitCode = async () => {
-    if (!isComplete || submitting) return;
+  const submitCode = async (value = code) => {
+    if (value.length !== CODE_LENGTH || submitting) return;
 
     setSubmitting(true);
     try {
-      // Placeholder for API/database verification.
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      await checkInWithManualCode(value);
       toast.success("Attendance checked in successfully.");
       router.replace("/(app)");
-    } catch {
-      toast.error("That code could not be verified.");
+    } catch (error: any) {
+      toast.error(apiErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -258,7 +261,7 @@ export default function ManualCodeScreen() {
                       const cleaned = sanitizeCode(next);
                       setCode(cleaned);
                       if (cleaned.length === CODE_LENGTH) {
-                        void submitCode();
+                        void submitCode(cleaned);
                       }
                     }}
                     autoFocus
@@ -270,7 +273,7 @@ export default function ManualCodeScreen() {
                     importantForAutofill="yes"
                     caretHidden
                     style={styles.hiddenInput}
-                    onSubmitEditing={submitCode}
+                    onSubmitEditing={() => void submitCode()}
                     returnKeyType="done"
                   />
                 </Pressable>
@@ -310,7 +313,7 @@ export default function ManualCodeScreen() {
               style={styles.footerStack}
             >
               <Pressable
-                onPress={submitCode}
+                onPress={() => void submitCode()}
                 disabled={!isComplete || submitting}
                 style={({ pressed }) => [
                   styles.submitButton,

@@ -1,5 +1,6 @@
 import { Colors, Outfit } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
+import { apiErrorMessage, checkInWithQr } from "@/lib/attendance-check-in";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { Camera, ChevronLeft, Flashlight, RefreshCw, ShieldAlert } from "lucide-react-native";
@@ -57,20 +58,18 @@ export default function QRCodeScreen() {
     transform: [{ translateY: laserTranslateY.value }],
   }));
 
-  const handleBarcodeScanned = async ({ type, data }: { type: string; data: string }) => {
+  const handleBarcodeScanned = async ({ data }: { type: string; data: string }) => {
     if (scanned || verifying) return;
     setScanned(true);
     setVerifying(true);
     toast.success("Code detected!");
 
-    // Simulate verification or process data
     try {
-      // TODO: Perform database verification or call check-in api here
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await checkInWithQr(data);
       toast.success("Checked in successfully!");
       router.replace("/(app)");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to check in");
+    } catch (error: any) {
+      toast.error(apiErrorMessage(error));
       setScanned(false);
     } finally {
       setVerifying(false);

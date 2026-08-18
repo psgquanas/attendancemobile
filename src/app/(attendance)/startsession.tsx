@@ -1,3 +1,4 @@
+import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
     ArrowLeft,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -27,6 +29,7 @@ import { toast } from "sonner-native";
 
 import { Colors, Outfit } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
+import { api } from "@/lib/axios";
 
 type Palette = (typeof Colors)[keyof typeof Colors];
 type CheckInMode = "qr" | "manual" | "both";
@@ -113,9 +116,11 @@ export default function StartSessionScreen() {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }, [customDuration, duration]);
 
-  const canStart = title.trim().length > 0 && Boolean(resolvedDuration);
+  const [submitting, setSubmitting] = useState(false);
+  const canStart =
+    title.trim().length > 0 && Boolean(resolvedDuration) && !submitting;
 
-  const handleStartSession = () => {
+  const handleStartSession = async () => {
     if (!title.trim()) {
       toast.error("Add a session title first.");
       return;
@@ -126,9 +131,65 @@ export default function StartSessionScreen() {
       return;
     }
 
-    toast.success("Attendance session ready to start", {
-      description: `${resolvedDuration} min · ${mode === "both" ? "QR + manual" : mode === "qr" ? "QR only" : "Manual only"}${requireLocation ? ` · ${radius}m radius` : ""}`,
-    });
+    if (!classId) {
+      toast.error("No class selected.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      let latitude: number | undefined;
+      let longitude: number | undefined;
+
+      if (requireLocation) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+          toast.error("Location permission is required to start this session.");
+          setSubmitting(false);
+          return;
+        }
+
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      }
+
+      const response = await api.post("/api/sessions", {
+        classId,
+        title: title.trim(),
+        checkInMode: mode.toUpperCase(),
+        durationMinutes: resolvedDuration,
+        requireLocation,
+        allowedRadius: requireLocation ? radius : undefined,
+        latitude,
+        longitude,
+      });
+
+      const session = response.data?.data ?? response.data;
+
+      toast.success("Session started!", {
+        description: `${resolvedDuration} min · ${mode === "both" ? "QR + manual" : mode === "qr" ? "QR only" : "Manual only"}${requireLocation ? ` · ${radius}m radius` : ""}`,
+      });
+
+      router.push({
+        pathname: "/(attendance)/livesession",
+        params: {
+          sessionId: session.id,
+          classId,
+        },
+      });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || "Failed to start session";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -490,18 +551,27 @@ export default function StartSessionScreen() {
               },
             ]}
           >
-            <Text
-              style={[
-                styles.primaryButtonText,
-                {
-                  color: canStart
-                    ? colors.primaryForeground
-                    : colors.textSecondary,
-                },
-              ]}
-            >
-              Start attendance session
-            </Text>
+            {submitting ? (
+              <ActivityIndicator
+                size="small"
+                color={
+                  canStart ? colors.primaryForeground : colors.textSecondary
+                }
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.primaryButtonText,
+                  {
+                    color: canStart
+                      ? colors.primaryForeground
+                      : colors.textSecondary,
+                  },
+                ]}
+              >
+                Start attendance session
+              </Text>
+            )}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

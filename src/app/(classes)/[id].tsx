@@ -190,11 +190,14 @@ function Pill({
       style={[
         styles.pill,
         {
-          backgroundColor: `${toneColor}14`,
-          borderColor: `${toneColor}33`,
+          backgroundColor: `${toneColor}1A`,
+          borderColor: `${toneColor}40`,
         },
       ]}
     >
+      {tone === "danger" ? (
+        <View style={[styles.liveDot, { backgroundColor: toneColor }]} />
+      ) : null}
       <Text style={[styles.pillText, { color: toneColor }]}>{label}</Text>
     </View>
   );
@@ -620,7 +623,9 @@ export default function ClassDetailScreen() {
           (item) => String(item.id) === String(classId),
         );
 
-        const mappedClass = selected ? mapClassDetail(selected, isLecturer) : null;
+        const mappedClass = selected
+          ? mapClassDetail(selected, isLecturer)
+          : null;
 
         if (mappedClass) {
           try {
@@ -725,6 +730,7 @@ export default function ClassDetailScreen() {
                 {
                   backgroundColor: colors.primary,
                   opacity: pressed ? 0.84 : 1,
+                  shadowColor: colors.primary,
                 },
               ]}
             >
@@ -763,21 +769,36 @@ export default function ClassDetailScreen() {
           </View>
         ) : classDetail ? (
           <>
-            <View style={styles.heroCard}>
+            <View
+              style={[
+                styles.heroCard,
+                {
+                  backgroundColor: colors.backgroundElement,
+                  borderColor: colors.backgroundSelected,
+                },
+              ]}
+            >
               <View style={styles.heroTop}>
-                {isLecturer ? (
-                  <GraduationCap
-                    size={18}
-                    color={colors.textSecondary}
-                    strokeWidth={1.75}
-                  />
-                ) : (
-                  <BookOpen
-                    size={18}
-                    color={colors.textSecondary}
-                    strokeWidth={1.75}
-                  />
-                )}
+                <View
+                  style={[
+                    styles.heroKickerIcon,
+                    { backgroundColor: colors.backgroundSelected },
+                  ]}
+                >
+                  {isLecturer ? (
+                    <GraduationCap
+                      size={14}
+                      color={colors.textSecondary}
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <BookOpen
+                      size={14}
+                      color={colors.textSecondary}
+                      strokeWidth={2}
+                    />
+                  )}
+                </View>
                 <Text
                   style={[styles.kicker, { color: colors.textSecondary }]}
                   selectable
@@ -813,12 +834,22 @@ export default function ClassDetailScreen() {
                 >
                   Class code
                 </Text>
-                <Text
-                  style={[styles.codeValue, { color: colors.primary }]}
-                  selectable
+                <View
+                  style={[
+                    styles.codeChip,
+                    {
+                      backgroundColor: `${colors.primary}14`,
+                      borderColor: `${colors.primary}33`,
+                    },
+                  ]}
                 >
-                  {classDetail.code}
-                </Text>
+                  <Text
+                    style={[styles.codeValue, { color: colors.primary }]}
+                    selectable
+                  >
+                    {classDetail.code}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -910,7 +941,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 44,
-    gap: 16,
+    gap: 18,
   },
   headerRow: {
     minHeight: 40,
@@ -921,13 +952,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     flexShrink: 0,
-    minHeight: 40,
+    width: 40,
+    height: 40,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 13,
   },
   backText: {
     fontFamily: Outfit.semiBold,
@@ -942,7 +974,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 3,
   },
   startSessionText: {
     flexShrink: 1,
@@ -952,14 +988,26 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   heroCard: {
+    paddingHorizontal: 18,
     paddingVertical: 20,
+    borderWidth: 1,
+    borderRadius: 24,
+    borderCurve: "continuous",
     gap: 6,
   },
   heroTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  heroKickerIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    borderCurve: "continuous",
+    alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     flex: 1,
@@ -973,7 +1021,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   title: {
-    fontSize: 22,
+    fontSize: 23,
     fontFamily: "Outfit_600SemiBold",
     letterSpacing: -0.3,
   },
@@ -983,7 +1031,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginVertical: 14,
+    marginVertical: 16,
   },
   codeRow: {
     flexDirection: "row",
@@ -994,33 +1042,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Outfit_400Regular",
   },
+  codeChip: {
+    borderWidth: 1,
+    borderRadius: 10,
+    borderCurve: "continuous",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
   codeValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: "Outfit_500Medium",
     letterSpacing: 1.5, // gives class codes a "code" feel without a monospace font
   },
   statsGrid: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
   },
   statTile: {
     flex: 1,
-    minHeight: 82,
+    minHeight: 88,
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 20,
     borderCurve: "continuous",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 13,
     justifyContent: "flex-end",
     gap: 10,
   },
   statIcon: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 28,
-    height: 28,
-    borderRadius: 10,
+    top: 11,
+    right: 11,
+    width: 30,
+    height: 30,
+    borderRadius: 11,
     borderCurve: "continuous",
     alignItems: "center",
     justifyContent: "center",
@@ -1038,8 +1093,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   statValue: {
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 25,
+    lineHeight: 29,
     fontFamily: Outfit.semiBold,
     letterSpacing: -0.45,
     fontVariant: ["tabular-nums"],
@@ -1047,7 +1102,7 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: "row",
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 20,
     borderCurve: "continuous",
     padding: 4,
     gap: 4,
@@ -1057,7 +1112,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 16,
     borderCurve: "continuous",
     paddingHorizontal: 8,
     paddingVertical: 9,
@@ -1091,18 +1146,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   rowCard: {
-    minHeight: 74,
+    minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderRadius: 20,
     borderCurve: "continuous",
-    padding: 13,
+    padding: 14,
     gap: 12,
   },
   avatar: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 14,
     borderCurve: "continuous",
     alignItems: "center",
@@ -1125,10 +1180,16 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 5,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 5,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 999,
   },
   pillText: {
     fontFamily: Outfit.bold,
@@ -1139,9 +1200,9 @@ const styles = StyleSheet.create({
   },
   attendanceCard: {
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 24,
     borderCurve: "continuous",
-    padding: 16,
+    padding: 18,
     gap: 14,
   },
   attendanceTop: {
@@ -1152,13 +1213,13 @@ const styles = StyleSheet.create({
   },
   attendanceValue: {
     fontFamily: Outfit.bold,
-    fontSize: 36,
-    lineHeight: 40,
+    fontSize: 38,
+    lineHeight: 42,
     letterSpacing: -0.7,
     fontVariant: ["tabular-nums"],
   },
   progressTrack: {
-    height: 9,
+    height: 10,
     borderRadius: 999,
     overflow: "hidden",
   },
@@ -1192,12 +1253,12 @@ const styles = StyleSheet.create({
     borderCurve: "continuous",
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: 26,
     gap: 10,
   },
   emptyIcon: {
-    width: 50,
-    height: 50,
+    width: 52,
+    height: 52,
     borderRadius: 18,
     borderCurve: "continuous",
     alignItems: "center",
